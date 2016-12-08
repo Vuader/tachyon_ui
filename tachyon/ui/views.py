@@ -86,15 +86,131 @@ class Auth(nfw.Middleware):
             nfw.jinja.globals['LOGIN'] = True
         nfw.jinja.globals['MENU'] = req.app_context['menu'].render(req.app)
 
-class tachyon(nfw.Resource):
+
+class Customers(nfw.Resource):
     def __init__(self, app):
-        app.router.add(nfw.HTTP_GET, '/', self.home, 'UI:HOME')
-        app.router.add(nfw.HTTP_GET, '/login', self.login, 'UI:LOGIN')
-        app.router.add(nfw.HTTP_POST, '/login', self.login, 'UI:LOGIN')
-        app.router.add(nfw.HTTP_GET, '/logout', self.logout, 'UI:LOGOUT')
+        app.router.add(nfw.HTTP_GET, '/customers', self.view, 'CUSTOMERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/customers/view', self.view, 'CUSTOMERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/customers/view/{customer_id}', self.view, 'CUSTOMERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/customers/add', self.add, 'CUSTOMERS:ADMIN')
+        app.router.add(nfw.HTTP_POST, '/customers/add', self.add, 'CUSTOMERS:ADMIN')
+        app.router.add(nfw.HTTP_GET, '/customers/edit/{customer_id}', self.edit, 'CUSTOMERS:ADMIN')
+        app.router.add(nfw.HTTP_POST, '/customers/edit/{customer_id}', self.edit, 'CUSTOMERS:ADMIN')
+
+    def view(self, req, resp, customer_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def add(self, req, resp):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def edit(self, req, resp, customer_id):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+class Service(nfw.Resource):
+    def __init__(self, app):
+        app.router.add(nfw.HTTP_GET, '/services', self.view, 'SERVICES:VIEW')
+        app.router.add(nfw.HTTP_GET, '/services/view', self.view, 'SERVICES:VIEW')
+        app.router.add(nfw.HTTP_GET, '/services/view/{customer_service_id}', self.view, 'SERVICES:VIEW')
+        app.router.add(nfw.HTTP_GET, '/services/add', self.add, 'SERVICES:USER')
+        app.router.add(nfw.HTTP_GET, '/services/add/{service_id}', self.add, 'SERVICES:USER')
+        app.router.add(nfw.HTTP_GET, '/services/attend', self.attend, 'SERVICES:ADMIN')
+
+    def view(self, req, resp, customer_service_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def add(self, req, resp, service_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def attend(self, req, resp):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+
+class User(nfw.Resource):
+    def __init__(self, app):
+        app.router.add(nfw.HTTP_GET, '/users', self.view, 'USERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/users/view', self.view, 'USERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/users/view/{user_id}', self.view, 'USERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/users/add', self.add, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_POST, '/users/add', self.add, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_GET, '/users/edit/{user_id}', self.edit, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_POST, '/users/edit/{user_id}', self.edit, 'USERS:ADMIN')
+
+    def view(self, req, resp, user_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def edit(self, req, resp, user_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def add(self, req, resp):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+class Roles(nfw.Resource):
+    def __init__(self, app):
+        app.router.add(nfw.HTTP_GET, '/users/roles', self.view, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_GET, '/users/roles/view', self.view, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_GET, '/users/roles/view/{role_id}', self.view, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_GET, '/users/roles/edit/{role_id}', self.edit, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_POST, '/users/roles/edit/{role_id}', self.edit, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_GET, '/users/roles/add', self.add, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_POST, '/users/roles/add', self.add, 'USERS:ADMIN')
+
+    def view(self, req, resp, role_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def edit(self, req, resp, role_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def add(self, req, resp):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+class Domains(nfw.Resource):
+    def __init__(self, app):
+        app.router.add(nfw.HTTP_GET, '/users/domains', self.view, 'USERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/users/domains/view', self.view, 'USERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/users/domains/view/{role_id}', self.view, 'USERS:VIEW')
+        app.router.add(nfw.HTTP_GET, '/users/domains/edit/{role_id}', self.edit, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_POST, '/users/domains/edit/{role_id}', self.edit, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_GET, '/users/domains/add', self.add, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_POST, '/users/domains/add', self.add, 'USERS:ADMIN')
+
+    def view(self, req, resp, role_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def edit(self, req, resp, role_id=None):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+    def add(self, req, resp):
+        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        resp.body = t.render()
+
+class Tachyon(nfw.Resource):
+    def __init__(self, app):
+        app.router.add(nfw.HTTP_GET, '/', self.home, 'TACHYON:PUBLIC')
+        app.router.add(nfw.HTTP_GET, '/login', self.login, 'TACHYON:PUBLIC')
+        app.router.add(nfw.HTTP_POST, '/login', self.login, 'TACHYON:PUBLIC')
+        app.router.add(nfw.HTTP_GET, '/logout', self.logout, 'TACHYON:PUBLIC')
         app.context['menu'] = Menu()
-        #app.context['menu'].add('/main/login','/login','UI:LOGIN')
-        #app.context['menu'].add('/main/testing/karoo','/logout','UI:LOGIN')
+        app.context['menu'].add('/Accounts/Customers','/customers','CUSTOMERS:VIEW')
+        app.context['menu'].add('/Accounts/Users','/users','USERS:VIEW')
+        app.context['menu'].add('/Accounts/Roles','/users/roles','USERS:VIEW')
+        app.context['menu'].add('/Accounts/Domains','/users/domains','USERS:VIEW')
+        app.context['menu'].add('/Services/Attend','/services/attend','SERVICES:ADMIN')
+        app.context['menu'].add('/Services/View','/services/view','SERVICES:USER')
+        app.context['menu'].add('/Services/Add','/services/add','SERVICES:USER')
 
     def logout(self, req, resp):
         del req.session['token']
