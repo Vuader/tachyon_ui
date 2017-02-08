@@ -1,6 +1,6 @@
 # Tachyon OSS Framework
 #
-# Copyright (c) 2016, see Authors.txt
+# Copyright (c) 2016-2017, see Authors.txt
 # All rights reserved.
 #
 # LICENSE: (BSD3-Clause)
@@ -29,13 +29,17 @@
 # OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
 import logging
-from .restclient import RestClient
+
+from tachyon.ui import RestClient
 
 import nfw
 
 log = logging.getLogger(__name__)
+
 
 class Globals(nfw.Middleware):
     def __init__(self, app):
@@ -44,8 +48,9 @@ class Globals(nfw.Middleware):
         self.app_config = self.config.get('application')
 
     def pre(self, req, resp):
-        req.context['url'] = self.ui_config.get('restapi','')
+        req.context['url'] = self.ui_config.get('restapi', '')
         nfw.jinja.globals['NAME'] = self.app_config.get('name')
+
 
 class Menu():
     def __init__(self):
@@ -63,7 +68,7 @@ class Menu():
             item = item.strip('/').split('/')
             for (i, l) in enumerate(item):
                 if len(item)-1 == i:
-                    sub.add_link(l,"%s/%s" % (app, link))
+                    sub.add_link(l, "%s/%s" % (app, link))
                 else:
                     if l in subs:
                         sub = subs[l]
@@ -71,11 +76,12 @@ class Menu():
                         s = nfw.bootstrap3.Menu()
                         subs[l] = s
                         if i == 0:
-                            sub.add_dropdown(l,s)
+                            sub.add_dropdown(l, s)
                         else:
-                            sub.add_submenu(l,s)
+                            sub.add_submenu(l, s)
                         sub = s
         return menu
+
 
 class Auth(nfw.Middleware):
     def __init__(self, app):
@@ -208,9 +214,6 @@ class Tachyon(nfw.Resource):
         app.context['menu'].add('/Accounts/Users','/users','USERS:VIEW')
         app.context['menu'].add('/Accounts/Roles','/users/roles','USERS:VIEW')
         app.context['menu'].add('/Accounts/Domains','/users/domains','USERS:VIEW')
-        app.context['menu'].add('/Services/Attend','/services/attend','SERVICES:ADMIN')
-        app.context['menu'].add('/Services/View','/services/view','SERVICES:USER')
-        app.context['menu'].add('/Services/Add','/services/add','SERVICES:USER')
 
     def logout(self, req, resp):
         del req.session['token']
