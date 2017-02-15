@@ -11,48 +11,110 @@
     <link rel="stylesheet" href="{{STATIC}}/custom.css" />
     <script src="{{STATIC}}/tachyon.ui/jquery-3.1.1.js"></script>
     <script src="{{STATIC}}/tachyon.ui/bootstrap/js/bootstrap.js"></script>
+    <script src="{{STATIC}}/tachyon.ui/tachyon.js"></script>
     <title>Tachyon</title>
 </head>
 <body>
-<!-- NAVBAR
-================================================== -->
-    <div class="navbar-wrapper">
-      <div class="container">
-        <nav class="navbar navbar-inverse navbar-static-top">
-          <div class="container-fluid">
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-wrapper menu">
+        <div class="container">
             <div class="navbar-header">
-              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-              </button>
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">{{ NAME }}</a>
             </div>
-            <a class="navbar-brand" href="#">{{ NAME }}</a>
             <div id="navbar" class="navbar-collapse collapse">
-              <ul class="nav navbar-nav navbar-left">
-                  {{ MENU }}
-              </ul>
-              <ul class="nav navbar-nav navbar-right">
-                  {% if LOGIN %}
-                  <li><A HREF="{{ SITE }}/logout">LOGOUT</A></li>
-                  {% endif %}
-              </ul>
+                <ul class="nav navbar-nav navbar-left" id="nav">
+                    {{ MENU }}
+                </ul>
+                {% if LOGIN %}
+                <form class="navbar-form navbar-right" method="get" action="{{ SITE }}/logout">
+                    <button type="submit" class="btn btn-success">Logout</button>
+                </form>
+                <form class="navbar-form navbar-right" method="post" action="{{ SITE }}/">
+                    <div class="form-group">
+                    <select class="form-control">
+                        {% for d in DOMAINS %}
+                        <option value='{{ d }}'>{{ d }}</option>
+                        {% endfor %}
+                    </select>
+                    </div>
+                </form>
+                {% endif %}
             </div>
-          </div>
-        </nav>
-       </div>
+        </div>
     </div>
+</nav>
 
-    {% block content %}{% endblock %}
+<div class="push_top"></div>
 
-    <div class="container">
-      <!-- FOOTER -->
-      <footer>
-        <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy; 2016 Christiaan F Rademan, Dave Kruger</p>
-      </footer>
-    </div><!-- /.container -->
-    {% include 'tachyon.ui/error.html' %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-3">
+            {% if LOGIN %}
+            <div class="block menu_accounts">
+                <div class="block_title">
+                    Accounts
+                </div>
+                <div class="block_content">
+                    <ul class="nav nav-pills nav-stacked">
+                    {{ MENU_ACCOUNTS }}
+                    </ul>
+                </div>
+            </div>
+            <div class="block menu_services">
+                <div class="block_title">
+                    Services
+                </div>
+                <div class="block_content">
+                    <ul class="nav nav-pills nav-stacked">
+                    {{ MENU_SERVICES }}
+                    </ul>
+                </div>
+            </div>
+            <div class="block">
+                <div class="block_title">
+                    Login
+                </div>
+                <div class="block_content">
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-sm-9">
+            <div class="block">
+                <div class="block_content" id="service">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <p class="pull-right"><a href="#">Back to top</a></p>
+</div>
+
+<div class="push_bottom"></div>
+
+<footer>
+</footer>
+
+{% include 'tachyon.ui/error.html' %}
+
+<!-- Modal -->
+<div class="modal fade" id="Dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="dialog">                                                                           
+            <div class="modal-body">Loading...</div>
+        </div>  
+    </div>  
+</div>  
+<!-- /.modal -->
+
 </body>
 </html>
