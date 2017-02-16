@@ -1,10 +1,21 @@
-{% extends "tachyon.ui/dialog.html" %}
-{% block title %}User Accounts{% endblock %}
-{% block module %}
-TESTING
+<table id="test" class="display" width="100%">
+    <thead>
+        <tr>
+            <th>username</th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <th>username</th>
+        </tr>
+    </thead>
+</table>
 <script>
-alert("hello world");
+$(document).ready(function() {
+    $('#test').DataTable( {
+        "processing": true,
+        "serverSide": true,
+        "ajax": "http://dev/ui/dt"
+    } );
+} );
 </script>
-{% endblock %}
-{% block footer %}
-{% endblock %} 

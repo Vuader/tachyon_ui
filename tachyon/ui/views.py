@@ -34,6 +34,7 @@ from __future__ import unicode_literals
 
 import logging
 import traceback
+import json
 
 import tachyon.ui
 from tachyon.common import RestClient
@@ -50,6 +51,7 @@ class Globals(nfw.Middleware):
         self.config = app.config
         self.ui_config = app.config.get('ui')
         self.app_config = self.config.get('application')
+        nfw.jinja.globals['TITLE'] = self.app_config.get('name','Tachyon')  
 
     def pre(self, req, resp):
         req.context['restapi'] = self.ui_config.get('restapi', '')
@@ -74,13 +76,13 @@ class Menu():
                 for (i, l) in enumerate(item):
                     if len(item)-1 == i:
                         if service is True:
-                            onclick = "return ajax('#service',"
-                            onclick += "'%s%s');" % (app, link)
-                            sub.add_link(l, "#",
+                            onclick = "return service(this);"
+                            sub.add_link(l, "%s%s" % (app, link),
                                          onclick=onclick)
                         else:
+                            onclick = "return admin(this);"
                             sub.add_link(l, "%s%s" % (app, link),
-                                         modal_target="#Dialog")
+                                         onclick=onclick)
                     else:
                         if l in subs:
                             sub = subs[l]
@@ -186,7 +188,7 @@ class Customers(nfw.Resource):
 
     def view(self, req, resp, customer_id=None):
         t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
-        resp.body = "<script>alert('hello world');</script>"
+        pass
 
     def add(self, req, resp):
         t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
@@ -323,3 +325,26 @@ class Tachyon(nfw.Resource):
                                  password=password,
                                  domain=domain,
                                  error=error)
+
+
+class DataTables(nfw.Resource):
+    def __init__(self, app):
+        app.router.add(nfw.HTTP_GET, '/dt', self.dt, 'tachyon:public')
+        app.router.add(nfw.HTTP_POST, '/dt', self.dt, 'tachyon:public')
+
+    def dt(self, req, resp):
+        api = RestClient(req.context['restapi'])
+        headers, result = api.execute(nfw.HTTP_GET, '/users')
+        number = len(result)
+        response = {}
+        response['draw'] = 1
+        response['recordsTotal'] = number
+        response['recordsFiltered'] = number
+        data = []
+        for row in result:
+            fields = []
+            for field in row:
+                fields.append(row[field])
+            data.append(fields)
+        response['data'] = data
+        return json.dumps(response, indent=4)

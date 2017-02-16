@@ -9,10 +9,12 @@
     <link rel="stylesheet" href="{{STATIC}}/tachyon.ui/bootstrap/css/signin.css" />
     <link rel="stylesheet" href="{{STATIC}}/tachyon.ui/tachyon.css" />
     <link rel="stylesheet" href="{{STATIC}}/custom.css" />
+    <link rel="stylesheet" type="text/css" href="{{STATIC}}/tachyon.ui/DataTables/datatables.min.css"/>
     <script src="{{STATIC}}/tachyon.ui/jquery-3.1.1.js"></script>
     <script src="{{STATIC}}/tachyon.ui/bootstrap/js/bootstrap.js"></script>
     <script src="{{STATIC}}/tachyon.ui/tachyon.js"></script>
-    <title>Tachyon</title>
+    <script type="text/javascript" src="{{STATIC}}/tachyon.ui/DataTables/datatables.min.js"></script>
+    <title>{{TITLE}}</title>
 </head>
 <body>
 <nav class="navbar navbar-inverse navbar-fixed-top">
@@ -28,9 +30,11 @@
                 <a class="navbar-brand" href="#">{{ NAME }}</a>
             </div>
             <div id="navbar" class="navbar-collapse collapse">
-                <ul class="nav navbar-nav navbar-left" id="nav">
+                <div id="topmenu">
+                <ul class="nav navbar-nav navbar-left">
                     {{ MENU }}
                 </ul>
+                </div>
                 {% if LOGIN %}
                 <form class="navbar-form navbar-right" method="get" action="{{ SITE }}/logout">
                     <button type="submit" class="btn btn-success">Logout</button>
@@ -51,6 +55,19 @@
 </nav>
 
 <div class="push_top"></div>
+<div class="loading" id="loading"></div>
+<div class="locked" id="locked"></div>
+<div class="window" id="window">
+    <div class="modal-header">
+        <button class="close" type="button" onclick='close_window()'>x</button>
+        <h4 class="modal-title" id='window_title'>Title</h4>
+    </div>
+    <div class="modal-body" id="window_content">
+        Content
+    </div>
+    <div class="modal-footer">
+    </div>
+</div>
 
 <div class="container">
     <div class="row">
@@ -87,6 +104,7 @@
         </div>
         <div class="col-sm-9">
             <div class="block">
+                <div class="block_title" id="title">{{TITLE}}</div>
                 <div class="block_content" id="service">
                     {% block content %}{% endblock %}
                 </div>
@@ -105,16 +123,6 @@
 </footer>
 
 {% include 'tachyon.ui/error.html' %}
-
-<!-- Modal -->
-<div class="modal fade" id="Dialog" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content" id="dialog">                                                                           
-            <div class="modal-body">Loading...</div>
-        </div>  
-    </div>  
-</div>  
-<!-- /.modal -->
 
 </body>
 </html>

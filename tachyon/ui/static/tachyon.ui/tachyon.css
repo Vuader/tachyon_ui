@@ -9,9 +9,39 @@ body {
 
 .modal-dialog  {width:75%;}
 
-div.loading {
-    overflow: hidden;
+div.locked {
     display: none;
+    background-color: #000000;
+    overflow: hidden;
+    position: fixed;
+    z-index: 1050;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0.6;
+}
+
+div.window {
+    display: none;
+    position: absolute;
+    top: 20%;
+    left: 20%;
+    margin-top: -50px;
+    margin-left: -150px;
+    width: 80%;
+    height: auto; 
+    background-color: #FFFFFF;
+    z-index: 1060;
+	overflow: auto;
+	border: 1px solid rgba(0, 0, 0, .2);
+	border-radius: 6px;
+	box-shadow: 0 5px 15px rgba(0, 0, 0, .5);
+}
+
+div.loading {
+    display: none;
+    overflow: hidden;
     position: fixed;
     z-index: 5000;
     top: 0;
