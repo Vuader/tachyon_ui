@@ -35,6 +35,7 @@ from __future__ import unicode_literals
 import logging
 import traceback
 import json
+from collections import OrderedDict
 
 import tachyon.ui
 from tachyon.common import RestClient
@@ -45,6 +46,40 @@ import nfw
 
 log = logging.getLogger(__name__)
 
+
+def datatable(req, table_id, url, fields, width='100%'):
+    dom = nfw.web.Dom() 
+    table = dom.create_element('table')
+    table.set_attribute('id', table_id)
+    table.set_attribute('class', 'display')
+    table.set_attribute('style', "style=\"width:%s\"" % (width,))
+
+    thead = table.create_element('thead')
+    tr = thead.create_element('tr')
+    api_fields = []
+    for field in fields:
+        th = tr.create_element('th')
+        th.append(fields[field])
+        api_fields.append("%s=%s" % (field, fields[field]))
+    api_fields = ",".join(api_fields)
+
+    tfoot = table.create_element('tfoot')
+    tr = tfoot.create_element('tr')
+    for field in fields:
+        th = tr.create_element('th')
+        th.append(fields[field])
+
+    js = "$(document).ready(function() {"
+    js += "$('#test').DataTable( {"
+    js += "'processing': true,"
+    js += "'serverSide': true,"
+    js += "'ajax': '%s/dt/?api=%s&fields=%s'" % (req.app, url, api_fields)
+    js += "} );"
+    js += "} );"
+    script = dom.create_element('script')
+    script.append(js)
+
+    return dom.get()
 
 class Globals(nfw.Middleware):
     def __init__(self, app):
@@ -211,7 +246,12 @@ class User(nfw.Resource):
 
     def view(self, req, resp, user_id=None):
         t = nfw.jinja.get_template('tachyon.ui/users/users.html')
-        resp.body = t.render()
+        fields = OrderedDict()
+        fields['username'] = 'Username'
+        fields['email'] = 'Email'
+
+        dt = datatable(req, 'test','/users', fields)
+        resp.body = t.render(dt=dt)
 
     def edit(self, req, resp, user_id=None):
         t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
@@ -333,17 +373,46 @@ class DataTables(nfw.Resource):
         app.router.add(nfw.HTTP_POST, '/dt', self.dt, 'tachyon:public')
 
     def dt(self, req, resp):
+        url = req.query.get('api', [ '' ])
+        api_fields = req.query.get('fields', [ '' ])
+        api_fields = api_fields[0].split(",")
+        draw = req.query.get('draw', [ 0 ])
+        start = req.query.get('start', [ 0 ])
+        length = req.query.get('length', [ 0 ])
+        search = req.query.get('search[value]', [ None ])
+        order = req.query.get("order[0][dir]")
+        column = req.query.get("order[0][column]")
+        count = 0
+        orderby = None
+        if order is not None and column is not None:
+            order = order[0]
+            column = column[0]
+            for api_field in api_fields:
+                if column == str(count):
+                    order_field, order_field_name = api_field.split('=')
+                    orderby = "%s %s" % (order_field, order)
+                count += 1
         api = RestClient(req.context['restapi'])
-        headers, result = api.execute(nfw.HTTP_GET, '/users')
+        request_headers = {}
+        request_headers['X-Pager-Start'] = start[0]
+        request_headers['X-Pager-Limit'] = length[0]
+        if orderby is not None:
+            request_headers['X-Order-By'] = orderby
+
+        if search[0] is not None:
+            request_headers['X-Search'] = search[0]
+        response_headers, result = api.execute(nfw.HTTP_GET, url[0],
+                                               headers=request_headers)
         number = len(result)
         response = {}
-        response['draw'] = 1
+        response['draw'] = int(draw[0])
         response['recordsTotal'] = number
         response['recordsFiltered'] = number
         data = []
         for row in result:
             fields = []
-            for field in row:
+            for api_field in api_fields:
+                field, name = api_field.split("=")
                 fields.append(row[field])
             data.append(fields)
         response['data'] = data
