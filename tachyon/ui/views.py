@@ -43,6 +43,8 @@ from tachyon.common import RestClient
 
 import nfw
 
+from tachyon.ui import model
+
 
 log = logging.getLogger(__name__)
 
@@ -138,6 +140,7 @@ def authenticated(req, auth):
         req.context['roles'] = []
         req.context['domain_admin'] = False
         req.context['domains'] = []
+	nfw.jinja.globals['USERNAME'] = auth['username']
         for r in auth['roles']:
             if r['domain_name'] not in req.context['domains']:
                 req.context['domains'].append(r['domain_name'])
@@ -251,7 +254,11 @@ class User(nfw.Resource):
         fields['email'] = 'Email'
 
         dt = datatable(req, 'test','/users', fields)
-        resp.body = t.render(dt=dt)
+	api = RestClient(req.context['restapi'])
+	headers, response = api.execute(nfw.HTTP_GET,'/users/C0418B28-CCAE-459E-8882-568F433C46FB')
+	userform = model.User(req)
+	userform.load(response)
+        resp.body = t.render(dt=dt,userform=userform)
 
     def edit(self, req, resp, user_id=None):
         t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
@@ -272,7 +279,7 @@ class Roles(nfw.Resource):
         app.router.add(nfw.HTTP_POST, '/users/roles/add', self.add, 'USERS:ADMIN')
 
     def view(self, req, resp, role_id=None):
-        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+        t = nfw.jinja.get_template('tachyon.ui/roles/roles.html')
         resp.body = t.render()
 
     def edit(self, req, resp, role_id=None):

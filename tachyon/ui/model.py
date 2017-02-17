@@ -38,4 +38,8 @@ import nfw
 
 log = logging.getLogger(__name__)
 
+from tachyon.api import model as apimodel
 
+
+class User(nfw.bootstrap3.Form,apimodel.User):
+	pass
