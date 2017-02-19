@@ -49,7 +49,9 @@ from tachyon.ui import model
 log = logging.getLogger(__name__)
 
 
-def datatable(req, table_id, url, fields, width='100%'):
+def datatable(req, table_id, url,
+              fields, width='100%', view_button=False,
+              service=False):
     dom = nfw.web.Dom() 
     table = dom.create_element('table')
     table.set_attribute('id', table_id)
@@ -63,6 +65,11 @@ def datatable(req, table_id, url, fields, width='100%'):
         th = tr.create_element('th')
         th.append(fields[field])
         api_fields.append("%s=%s" % (field, fields[field]))
+    if view_button is True:
+        th = tr.create_element('th')
+        th.append('&nbsp;')
+        api_fields.append("%s=%s" % ('id', 'id'))
+    id_field_no = len(api_fields) - 1
     api_fields = ",".join(api_fields)
 
     tfoot = table.create_element('tfoot')
@@ -70,18 +77,45 @@ def datatable(req, table_id, url, fields, width='100%'):
     for field in fields:
         th = tr.create_element('th')
         th.append(fields[field])
+    if view_button is True:
+        th = tr.create_element('th')
+        th.append('&nbsp;')
 
     js = "$(document).ready(function() {"
-    js += "$('#test').DataTable( {"
+    js += "var table = $('#%s').DataTable( {" % (table_id,)
     js += "'processing': true,"
     js += "'serverSide': true,"
     js += "'ajax': '%s/dt/?api=%s&fields=%s'" % (req.app, url, api_fields)
+    if view_button is True:
+        js += ",\"columnDefs\": ["
+        js += "{\"targets\": -1,"
+        js += "\"data\": null,"
+        js += "\"width\": \"26px\","
+        js += "\"orderable\": false,"
+        js += "\"defaultContent\":"
+        js += " '<button class=\"view_button\"></button>'"
+        js += "}"
+        js += "]"
     js += "} );"
+    if view_button is True:
+        url = req.get_url()
+	js += "$('#%s tbody')" % (table_id,)
+        js += ".on( 'click', 'button', function () {"
+	js += "var data = table.row( $(this).parents('tr') ).data();"
+        if service is False:
+            js += "ajax_query(\"#window_content\", \"%s/view/\"+data[%s]);" % (url,
+                                                                          id_field_no)
+        else:
+            js += "ajax_query(\"#service\", \"%s/view/\"+data[%s]);" % (url,
+                                                                   id_field_no )
+	js += "} );"
+
     js += "} );"
     script = dom.create_element('script')
     script.append(js)
 
     return dom.get()
+
 
 class Globals(nfw.Middleware):
     def __init__(self, app):
@@ -239,38 +273,63 @@ class Customers(nfw.Resource):
 
 class User(nfw.Resource):
     def __init__(self, app):
-        app.router.add(nfw.HTTP_GET, '/users', self.view, 'users:view')
-        app.router.add(nfw.HTTP_GET, '/users/view', self.view, 'USERS:VIEW')
-        app.router.add(nfw.HTTP_GET, '/users/view/{user_id}', self.view, 'USERS:VIEW')
-        app.router.add(nfw.HTTP_GET, '/users/add', self.add, 'USERS:ADMIN')
-        app.router.add(nfw.HTTP_POST, '/users/add', self.add, 'USERS:ADMIN')
-        app.router.add(nfw.HTTP_GET, '/users/edit/{user_id}', self.edit, 'USERS:ADMIN')
-        app.router.add(nfw.HTTP_POST, '/users/edit/{user_id}', self.edit, 'USERS:ADMIN')
+        # VIEW USERS
+        app.router.add(nfw.HTTP_GET,
+                       '/users',
+                       self.view,
+                       'users:view')
+        app.router.add(nfw.HTTP_GET,
+                       '/users/view/{id}',
+                       self.view,
+                       'users:view')
+        # ADD NEW USERS
+        app.router.add(nfw.HTTP_GET,
+                       '/users/add',
+                       self.create,
+                       'users:admin')
+        app.router.add(nfw.HTTP_POST,
+                       '/users/add',
+                       self.create,
+                       'users:admin')
+        # EDIT USERS
+        app.router.add(nfw.HTTP_GET,
+                       '/users/edit/{id}', self.edit,
+                       'users:admin')
+        app.router.add(nfw.HTTP_POST,
+                       '/users/edit/{id}', self.edit,
+                       'users:admin')
+
 
     def view(self, req, resp, user_id=None):
-        t = nfw.jinja.get_template('tachyon.ui/users/users.html')
-        fields = OrderedDict()
-        fields['username'] = 'Username'
-        fields['email'] = 'Email'
+        if user_id is None:
+            t = nfw.jinja.get_template('tachyon.ui/users/users.html')
+            fields = OrderedDict()
+            fields['username'] = 'Username'
+            fields['email'] = 'Email'
 
-        dt = datatable(req, 'test','/users', fields)
-	api = RestClient(req.context['restapi'])
-	headers, response = api.execute(nfw.HTTP_GET,'/users/C0418B28-CCAE-459E-8882-568F433C46FB')
-	userform = model.User(req)
-	userform.load(response)
-        resp.body = t.render(dt=dt,userform=userform)
+            dt = datatable(req, 'test', '/users',
+                           fields, view_button=True, service=False)
+
+            resp.body = t.render(dt=dt)
+        else:
+            t = nfw.jinja.get_template('tachyon.ui/users/view.html')
+            resp.body = t.render(dt=dt)
 
     def edit(self, req, resp, user_id=None):
-        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+	#api = RestClient(req.context['restapi'])
+	#headers, response = api.execute(nfw.HTTP_GET,'/users/C0418B28-CCAE-459E-8882-568F433C46FB')
+	#userform = model.User(req)
+	#userform.load(response)
+        t = nfw.jinja.get_template('tachyon.ui/users/edit.html')
         resp.body = t.render()
 
-    def add(self, req, resp):
-        t = nfw.jinja.get_template('tachyon.ui/dashboard.html')
+    def create(self, req, resp):
+        t = nfw.jinja.get_template('tachyon.ui/users/create.html')
         resp.body = t.render()
 
 class Roles(nfw.Resource):
     def __init__(self, app):
-        app.router.add(nfw.HTTP_GET, '/users/roles', self.view, 'USERS:ADMIN')
+        app.router.add(nfw.HTTP_GET, '/users/roles', self.view, 'users:admin')
         app.router.add(nfw.HTTP_GET, '/users/roles/view', self.view, 'USERS:ADMIN')
         app.router.add(nfw.HTTP_GET, '/users/roles/view/{role_id}', self.view, 'USERS:ADMIN')
         app.router.add(nfw.HTTP_GET, '/users/roles/edit/{role_id}', self.edit, 'USERS:ADMIN')
