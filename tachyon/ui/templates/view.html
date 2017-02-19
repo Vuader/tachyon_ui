@@ -1,0 +1,8 @@
+{% block form %}
+{% endblock %}
+{% if back %}
+<button onclick="ajax_query('{{ window }}','{{ SITE }}/{{ back }}');">Back</button>
+{% endif %}
+{% if edit %}
+<button onclick="ajax_query('{{ window }}','{{ SITE }}/{{ edit }}');">Edit</button>
+{% endif %}

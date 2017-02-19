@@ -175,6 +175,11 @@ def authenticated(req, auth):
         req.context['domain_admin'] = False
         req.context['domains'] = []
 	nfw.jinja.globals['USERNAME'] = auth['username']
+        req.session['token'] = req.session['token']
+        req.session['domain'] = req.session['domain']
+        if 'tenant' in req.session:
+            req.session['tenant'] = req.session['tenant']
+
         for r in auth['roles']:
             if r['domain_name'] not in req.context['domains']:
                 req.context['domains'].append(r['domain_name'])
@@ -284,11 +289,11 @@ class User(nfw.Resource):
                        'users:view')
         # ADD NEW USERS
         app.router.add(nfw.HTTP_GET,
-                       '/users/add',
+                       '/users/create',
                        self.create,
                        'users:admin')
         app.router.add(nfw.HTTP_POST,
-                       '/users/add',
+                       '/users/create',
                        self.create,
                        'users:admin')
         # EDIT USERS
@@ -307,13 +312,13 @@ class User(nfw.Resource):
             fields['username'] = 'Username'
             fields['email'] = 'Email'
 
-            dt = datatable(req, 'test', '/users',
+            dt = datatable(req, 'users', '/users',
                            fields, view_button=True, service=False)
 
             resp.body = t.render(dt=dt)
         else:
             t = nfw.jinja.get_template('tachyon.ui/users/view.html')
-            resp.body = t.render()
+            resp.body = t.render(window='#window_content',back='/users')
 
     def edit(self, req, resp, user_id=None):
 	#api = RestClient(req.context['restapi'])
@@ -322,6 +327,7 @@ class User(nfw.Resource):
 	#userform.load(response)
         t = nfw.jinja.get_template('tachyon.ui/users/edit.html')
         resp.body = t.render()
+
 
     def create(self, req, resp):
         t = nfw.jinja.get_template('tachyon.ui/users/create.html')
