@@ -279,7 +279,7 @@ class User(nfw.Resource):
                        self.view,
                        'users:view')
         app.router.add(nfw.HTTP_GET,
-                       '/users/view/{id}',
+                       '/users/view/{user_id}',
                        self.view,
                        'users:view')
         # ADD NEW USERS
@@ -293,10 +293,10 @@ class User(nfw.Resource):
                        'users:admin')
         # EDIT USERS
         app.router.add(nfw.HTTP_GET,
-                       '/users/edit/{id}', self.edit,
+                       '/users/edit/{user_id}', self.edit,
                        'users:admin')
         app.router.add(nfw.HTTP_POST,
-                       '/users/edit/{id}', self.edit,
+                       '/users/edit/{user_id}', self.edit,
                        'users:admin')
 
 
@@ -313,7 +313,7 @@ class User(nfw.Resource):
             resp.body = t.render(dt=dt)
         else:
             t = nfw.jinja.get_template('tachyon.ui/users/view.html')
-            resp.body = t.render(dt=dt)
+            resp.body = t.render()
 
     def edit(self, req, resp, user_id=None):
 	#api = RestClient(req.context['restapi'])
