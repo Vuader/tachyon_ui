@@ -72,7 +72,7 @@ def datatable(req, table_id, url, fields, width='100%'):
         th.append(fields[field])
 
     js = "$(document).ready(function() {"
-    js += "$('#test').DataTable( {"
+    js += "$('#" + table_id + "').DataTable( {"
     js += "'processing': true,"
     js += "'serverSide': true,"
     js += "'ajax': '%s/dt/?api=%s&fields=%s'" % (req.app, url, api_fields)
