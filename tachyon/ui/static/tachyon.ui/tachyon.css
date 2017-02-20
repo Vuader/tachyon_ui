@@ -63,7 +63,7 @@ div.loading {
     left: 0;
     height: 100%;
     width: 100%;
-    background: rgba( 255, 255, 255, .5 ) url('/static/tachyon.ui/images/loader.gif') 50% 50% no-repeat;
+    background: rgba( 255, 255, 255, .5 ) url('/tachyon.ui/images/loader.gif') 50% 50% no-repeat;
 }
 
 @media (min-width: 1350px)
@@ -74,7 +74,7 @@ div.loading {
     }                                                                                                                              
 }
 
-@media (max-width: 1300px) {
+@media (max-width: 800) {
     .navbar-header {
         float: none;
     }
