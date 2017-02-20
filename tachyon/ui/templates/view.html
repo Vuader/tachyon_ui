@@ -1,8 +1,13 @@
 {% block form %}
 {% endblock %}
-{% if back %}
-<button onclick="ajax_query('{{ window }}','{{ SITE }}/{{ back }}');">Back</button>
+{% if edit_url %}
+<button class="btn btn-warning" onclick="ajax_query('{{ window }}','{{ SITE }}/{{ edit_url }}');">Edit {{ resource }}</button>
 {% endif %}
-{% if edit %}
-<button onclick="ajax_query('{{ window }}','{{ SITE }}/{{ edit }}');">Edit</button>
+{% if back_url %}
+<button class="btn btn-default" onclick="admin_title('{{resource}}');ajax_query('{{ window }}','{{ SITE }}/{{ back_url }}');">Back</button>
+{% endif %}
+{% if admin_title %}
+<script>
+admin_title('{{ title }}')
+</script>
 {% endif %}

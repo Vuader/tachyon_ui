@@ -127,6 +127,10 @@ function admin(a) {
     return false
 }
 
+function admin_title(title) {
+    document.getElementById('window_title').innerHTML = title;
+}
+
 function form_service(form_id) {
     var form = document.getElementById(form_id);
     document.getElementById('loading').style.display = "block";
