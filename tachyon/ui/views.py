@@ -475,11 +475,14 @@ class DataTables(nfw.Resource):
             request_headers['X-Search'] = search[0]
         response_headers, result = api.execute(nfw.HTTP_GET, url[0],
                                                headers=request_headers)
-        number = len(result)
+
+
+        recordsTotal = int(response_headers.get('X-Total-Rows',0))
+        recordsFiltered = int(response_headers.get('X-Filtered-Rows',0))
         response = {}
         response['draw'] = int(draw[0])
-        response['recordsTotal'] = number
-        response['recordsFiltered'] = number
+        response['recordsTotal'] = recordsTotal
+        response['recordsFiltered'] = recordsFiltered
         data = []
         for row in result:
             fields = []
