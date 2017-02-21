@@ -127,6 +127,7 @@ class Globals(nfw.Middleware):
     def pre(self, req, resp):
         req.context['restapi'] = self.ui_config.get('restapi', '')
         nfw.jinja.globals['NAME'] = self.app_config.get('name')
+        resp.headers['Content-Type'] = nfw.TEXT_HTML
 
 
 class Menu():
@@ -216,6 +217,7 @@ def render_menus(req):
     nfw.jinja.globals['MENU_SERVICES'] = req.app_context['menu_services'].render(req.app,
                                                                                  req.policy,
                                                                                  True)
+
 
 class Auth(nfw.Middleware):
     def __init__(self, app):
@@ -430,7 +432,8 @@ class Tachyon(nfw.Resource):
                 error.append(e)
 
         if req.session.get('token') is not None:
-            nfw.view('/', nfw.HTTP_GET, req, resp)
+            # resp.view('/', nfw.HTTP_GET)
+            resp.redirect('/')
         else:
             t = nfw.jinja.get_template('tachyon.ui/login.html')
             resp.body = t.render(username=username,
@@ -445,6 +448,7 @@ class DataTables(nfw.Resource):
         app.router.add(nfw.HTTP_POST, '/dt', self.dt, 'tachyon:public')
 
     def dt(self, req, resp):
+        resp.headers['Content-Type'] = nfw.APPLICATION_JSON 
         url = req.query.get('api', [ '' ])
         api_fields = req.query.get('fields', [ '' ])
         api_fields = api_fields[0].split(",")
@@ -492,3 +496,248 @@ class DataTables(nfw.Resource):
             data.append(fields)
         response['data'] = data
         return json.dumps(response, indent=4)
+
+
+class Themes(nfw.Resource):
+    def __init__(self, app):
+        app_config = app.config.get('application') 
+        static = app_config.get('static', '').rstrip('/')
+        images = "%s/tachyon.ui/images" % (static,)
+        self.css = OrderedDict()
+        self.css['body'] = {}
+        self.css['body']['background'] = '#E7E8EB'
+        self.css['body']['margin-bottom'] = '0px'
+        self.css['body']['margin-left'] = '0px'
+        self.css['body']['margin-right'] = '0px'
+        self.css['body']['margin-top'] = '0px'
+        self.css['.modal-dialog'] = {}
+        self.css['.modal-dialog']['width'] = '75%'
+        self.css['button.view_button'] = {}
+        view_button = self.css['button.view_button']
+        view_button['height'] = '24px'
+        view_button['width'] = '24px'
+        view_button['border'] = '0px'
+        view_button['background-color'] = '#FFFFFF'
+        view_button['background-image'] = "url(\"%s/view.png\")" % (images,)
+        self.css['button.edit_button'] = {}
+        edit_button = self.css['button.edit_button']
+        edit_button['height'] = '24px'
+        edit_button['width'] = '24px'
+        edit_button['border'] = '0px'
+        edit_button['background-color'] = '#FFFFFF'
+        edit_button['background-image'] = "url(\"%s/edit.png\")" % (images,)
+        self.css['div.locked'] = {}
+        self.css['div.locked']['display'] = 'none'
+        self.css['div.locked']['background-color'] = '#000000'
+        self.css['div.locked']['overflow'] = 'hidden'
+        self.css['div.locked']['position'] = 'fixed'
+        self.css['div.locked']['z-index'] = '1003'
+        self.css['div.locked']['top'] = '0'
+        self.css['div.locked']['left'] = '0'
+        self.css['div.locked']['height'] = '100%'
+        self.css['div.locked']['width'] = '100%'
+        self.css['div.locked']['opacity'] = '0.6'
+        self.css['div.window'] = {}
+        self.css['div.window']['display'] = 'none'
+        self.css['div.window']['position'] = 'absolute'
+        self.css['div.window']['top'] = '50px'
+        self.css['div.window']['left'] = '10%'
+        self.css['div.window']['right'] = '10%'
+        self.css['div.window']['margin'] = 'auto'
+        self.css['div.window']['width'] = '80%'
+        self.css['div.window']['height'] = 'auto'
+        self.css['div.window']['background-color'] = '#FFFFFF'
+        self.css['div.window']['z-index'] = '1004'
+        self.css['div.window']['overflow'] = 'auto'
+        self.css['div.window']['border'] = '1px solid rgba(0, 0, 0, .2)'
+        self.css['div.window']['border-radius'] = '6px'
+        self.css['div.window']['box-shadow'] = '0 5px 15px rgba(0, 0, 0, .5)'
+        self.css['div.loading'] = {}
+        self.css['div.loading']['display'] = 'none'
+        self.css['div.loading']['overflow'] = 'hidden'
+        self.css['div.loading']['position'] = 'fixed'
+        self.css['div.loading']['z-index'] = '5000'
+        self.css['div.loading']['top'] = '0'
+        self.css['div.loading']['left'] = '0'
+        self.css['div.loading']['height'] = '100%'
+        self.css['div.loading']['width'] = '100%'
+        self.css['div.loading']['background'] = 'rgba( 255, 255, 255, .5 )'
+        self.css['div.loading']['background'] += "url(\'%s" % (images,)
+        self.css['div.loading']['background'] += '/loader.gif\')'
+        self.css['div.loading']['background'] += '50% 50% no-repeat'
+        self.css['@media (min-width: 1350px)'] = {}
+        self.css['@media (min-width: 1350px)']['.container'] = {}
+        self.css['@media (min-width: 1350px)']['.container']['width'] = '1300px'
+        self.css['@media (max-width: 800px)'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-header'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-header']['float'] = 'none'
+        self.css['@media (max-width: 800px)']['.navbar-left,.navbar-right'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-left,.navbar-right']['float'] = 'none !important'
+        self.css['@media (max-width: 800px)']['.navbar-toggle'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-toggle']['display'] = 'block'
+        self.css['@media (max-width: 800px)']['.navbar-collapse'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-collapse']['border-top'] = '1px solid transparent'
+        self.css['@media (max-width: 800px)']['.navbar-collapse']['box-shadow'] = 'inset 0 1px 0 rgba(255,255,255,0.1)'
+        self.css['@media (max-width: 800px)']['.navbar-fixed-top'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-fixed-top']['top'] = '0'
+        self.css['@media (max-width: 800px)']['.navbar-fixed-top']['border-width'] = '0 0 1px'
+        self.css['@media (max-width: 800px)']['.navbar-collapse.collapse'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-collapse.collapse']['display'] = 'none!important'
+        self.css['@media (max-width: 800px)']['.navbar-nav'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-nav']['float'] = 'none!important'
+        self.css['@media (max-width: 800px)']['.navbar-nav']['margin-top'] = '7.5px'
+        self.css['@media (max-width: 800px)']['.navbar-nav>li'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-nav>li']['float'] = 'none'
+        self.css['@media (max-width: 800px)']['.navbar-nav>li>a'] = {}
+        self.css['@media (max-width: 800px)']['.navbar-nav>li>a']['padding-top'] = '10px'
+        self.css['@media (max-width: 800px)']['.navbar-nav>li>a']['padding-bottom'] = '10px'
+        self.css['@media (max-width: 800px)']['.collapse.in'] = {}
+        self.css['@media (max-width: 800px)']['.collapse.in']['display'] = 'block !important'
+        self.css['.dropdown-menu'] = {}
+        self.css['.dropdown-menu']['border-radius'] = '0px'
+        self.css['.dropdown-menu']['-webkit-box-shadow'] = 'none'
+        self.css['.dropdown-menu']['box-shadow'] = 'none'
+        self.css['.dropdown-submenu'] = {}
+        self.css['.dropdown-submenu']['position'] = 'initial'
+        self.css['.dropdown-submenu>.dropdown-menu'] = {}
+        self.css['.dropdown-submenu>.dropdown-menu']['top'] = '0'
+        self.css['.dropdown-submenu>.dropdown-menu']['left'] = '100%'
+        self.css['.dropdown-submenu>.dropdown-menu']['margin-top'] = '-1px'
+        self.css['.dropdown-submenu>.dropdown-menu']['margin-left'] = '-1px'
+        self.css['.dropdown-submenu>.dropdown-menu']['-webkit-border-radius'] = '0'
+        self.css['.dropdown-submenu>.dropdown-menu']['-moz-border-radius'] = '0'
+        self.css['.dropdown-submenu>.dropdown-menu']['border-radius'] = '0'
+        self.css['.dropdown-submenu>.dropdown-menu']['min-height'] = '101%'
+        self.css['.dropdown-submenu:hover>.dropdown-menu'] = {}
+        self.css['.dropdown-submenu:hover>.dropdown-menu']['display'] = 'block'
+        self.css['.dropdown-submenu>a:after'] = {}
+        self.css['.dropdown-submenu>a:after']['display'] = 'block'
+        self.css['.dropdown-submenu>a:after']['content'] = '" "'
+        self.css['.dropdown-submenu>a:after']['float'] = 'right'
+        self.css['.dropdown-submenu>a:after']['width'] = '0'
+        self.css['.dropdown-submenu>a:after']['height'] = '0'
+        self.css['.dropdown-submenu>a:after']['border-color'] = 'transparent'
+        self.css['.dropdown-submenu>a:after']['border-style'] = 'solid'
+        self.css['.dropdown-submenu>a:after']['border-width'] = '5px 0 5px 5px'
+        self.css['.dropdown-submenu>a:after']['border-left-color'] = '#ccc'
+        self.css['.dropdown-submenu>a:after']['margin-top'] = '5px'
+        self.css['.dropdown-submenu>a:after']['margin-right'] = '-10px'
+        self.css['.dropdown-submenu:hover>a:after'] = {}
+        self.css['.dropdown-submenu:hover>a:after']['border-left-color'] = '#fff'
+        self.css['.dropdown-submenu.pull-left'] = {}
+        self.css['.dropdown-submenu.pull-left']['float'] = 'none'
+        self.css['.dropdown-submenu.pull-left>.dropdown-menu'] = {}
+        self.css['.dropdown-submenu.pull-left>.dropdown-menu']['left'] = '-100%'
+        self.css['.dropdown-submenu.pull-left>.dropdown-menu']['margin-left'] = '10px'
+        self.css['.dropdown-submenu.pull-left>.dropdown-menu']['-webkit-border-radius'] = '6px 0 6px 6px'
+        self.css['.dropdown-submenu.pull-left>.dropdown-menu']['-moz-border-radius'] = '6px 0 6px 6px'
+        self.css['.dropdown-submenu.pull-left>.dropdown-menu']['border-radius'] = '6px 0 6px 6px'
+        self.css['#error'] = {}
+        self.css['#error']['position'] = 'fixed'
+        self.css['#error']['left'] = 'auto; /* <-- Reset the default left value */'
+        self.css['#error']['right'] = '10px'
+        self.css['div.signin'] = {}
+        self.css['div.signin']['width'] = '50%'
+        self.css['div.signin']['max-width'] = '400px'
+        self.css['div.signin']['min-width'] = '200px'
+        self.css['div.signin']['margin'] = 'auto'
+        self.css['div.block'] = {}
+        self.css['div.block']['box-shadow'] = '5px 5px 5px #888888'
+        self.css['div.block']['opacity'] = '0.9'
+        self.css['div.block']['background-color'] = '#FFFFFF'
+        self.css['div.block']['border-color'] = '#D8D8D8'
+        self.css['div.block']['border-style'] = 'solid'
+        self.css['div.block']['border-width'] = '1px'
+        self.css['div.block']['color'] = '#5B5B5B'
+        self.css['div.block']['font-family'] = 'helvetica,arial,sans-serif'
+        self.css['div.block']['font-size'] = '12px'
+        self.css['div.block']['margin-bottom'] = '10px'
+        self.css['div.block']['margin-left'] = '0px'
+        self.css['div.block']['margin-right'] = '0px'
+        self.css['div.block']['margin-top'] = '0px'
+        self.css['div.block']['padding-bottom'] = '5px'
+        self.css['div.block']['padding-left'] = '5px'
+        self.css['div.block']['padding-right'] = '5px'
+        self.css['div.block']['padding-top'] = '5px'
+        self.css['div.block']['width'] = '100%'
+        self.css['div.block']['border-radius'] = '8px'
+        self.css['div.block_title'] = {}
+        self.css['div.block_title']['border-bottom-width'] = '1px'
+        self.css['div.block_title']['border-color'] = '#D8D8D8'
+        self.css['div.block_title']['border-left-width'] = '0px'
+        self.css['div.block_title']['border-right-width'] = '0px'
+        self.css['div.block_title']['border-style'] = 'solid'
+        self.css['div.block_title']['border-top-width'] = '0px'
+        self.css['div.block_title']['color'] = '#318BBB'
+        self.css['div.block_title']['font'] = "bold 15px 'lucida sans',"
+        self.css['div.block_title']['font'] += "'trebuchet MS', 'Tahoma'"
+        self.css['div.block_title']['margin-bottom'] = '5px'
+        self.css['div.block_title']['margin-left'] = '0px'
+        self.css['div.block_title']['margin-right'] = '0px'
+        self.css['div.block_title']['margin-top'] = '0px'
+        self.css['div.block_title']['width'] = '100%'
+        self.css['div.block_content'] = {}
+        self.css['div.block_content']['border-bottom-width'] = '0px'
+        self.css['div.block_content']['border-left-width'] = '0px'
+        self.css['div.block_content']['border-right-width'] = '0px'
+        self.css['div.block_content']['border-top-width'] = '0px'
+        self.css['div.block_content']['margin-bottom'] = '5px'
+        self.css['div.block_content']['margin-left'] = '0px'
+        self.css['div.block_content']['margin-right'] = '0px'
+        self.css['div.block_content']['margin-top'] = '0px'
+        self.css['div.block_content']['width'] = '100%'
+        self.css['div.menu'] = {}
+        self.css['div.menu']['z-index'] = '1002'
+        self.css['div.menu']['position'] = 'relative'
+        self.css['div.menu_accounts'] = {}
+        self.css['div.menu_accounts']['z-index'] = '1001'
+        self.css['div.menu_accounts']['position'] = 'relative'
+        self.css['div.menu_services'] = {}
+        self.css['div.menu_services']['z-index'] = '1000'
+        self.css['div.menu_services']['position'] = 'relative'
+        self.css['div.push_top'] = {}
+        self.css['div.push_top']['height'] = '70px'
+        self.css['div.push_top']['width'] = '100%'
+        self.css['div.push_top']['clear'] = 'both'
+        self.css['div.push_top']['z-index'] = '1'
+        self.css['div.push_bottom'] = {}
+        self.css['div.push_bottom']['height'] = '25px'
+        self.css['div.push_bottom']['width'] = '100%'
+        self.css['div.push_bottom']['clear'] = 'both'
+        self.css['div.push_bottom']['z-index'] = '1'
+        self.css['footer'] = {}
+        self.css['footer']['background-color'] = '#5B5B5B'
+        self.css['footer']['bottom'] = '0px'
+        self.css['footer']['clear'] = 'both'
+        self.css['footer']['color'] = '#FFFFFF'
+        self.css['footer']['font-size'] = '12px'
+        self.css['footer']['height'] = '20px'
+        self.css['footer']['line-height'] = '20px'
+        self.css['footer']['margin-bottom'] = '0px'
+        self.css['footer']['margin-top'] = '0px'
+        self.css['footer']['position'] = 'fixed'
+        self.css['footer']['text-align'] = 'center'
+        self.css['footer']['z-index'] = '2'
+        self.css['footer']['width'] = '100%'
+        self.css['footer:before'] = {}
+        self.css['footer:before']['content'] = '"Tachyon Framework - Copyright (c) 2016 to 2017, Christiaan Frans Rademan, Dave Kruger. All rights resevered. BSD3-Clause License"'
+        self.css['footer:after'] = {}
+        app.context['css'] = self.css
+        app.router.add(nfw.HTTP_GET, '/css', self.get, 'tachyon:public')
+
+    def get(self, req, resp):
+        resp.headers['Content-Type'] = nfw.TEXT_CSS
+
+        def css(d, tab=0):
+            spacer = "    " * tab
+            for v in d:
+                if isinstance(d[v], dict):
+                    resp.write("%s%s {\n" % (spacer, v,))
+                    css(d[v], tab+1)
+                    resp.write("%s}\n\n" % (spacer,))
+                else:
+                    val = "%s;" % (d[v].rstrip(';'),)
+                    resp.write("%s%s: %s\n" % (spacer, v, val))
+
+        css(self.css)
+
