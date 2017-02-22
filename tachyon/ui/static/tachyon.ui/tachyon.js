@@ -150,19 +150,15 @@ notices = 0
 
 function notice(n, css) {
     notices++;
-	var div = document.createElement("div");
-    div.id = "popup" + notices;
-	div.className = "popup " + css;
-    n = "<div style='width: 270px; float:left;'>" + n + "</div><div style='float:left;'><button class=\"close\" type=\"button\" onclick=\"close_notice('"+div.id+"');\">x</button></div>"
-    div.innerHTML = n;
-    popup = document.getElementById('popup');
-    popup.appendChild(div)
-    $('#'+div.id).hide()
-    $('#'+div.id).fadeIn()
+    divid = "popup" + notices;
+    n = "<div class=\"popup " + css + "\"><div style='width: 270px; float:left;'>" + n + "</div><div style='float:left;'><button class=\"close\" type=\"button\" onclick=\"close_notice('"+divid+"');\">x</button></div></div>"
+    $("#popup").prepend(n);
+    $('#'+divid).hide()
+    $('#'+divid).fadeIn()
     if (css != 'error') {
-        setTimeout(function() { close_notice(div.id); }, 10000);
+        setTimeout(function() { close_notice(divid); }, 10000);
     }
-    return String(div.id)
+    return String(divid)
 }
 
 function info(n) {
