@@ -151,7 +151,7 @@ notices = 0
 function notice(n, css) {
     notices++;
     divid = "popup" + notices;
-    n = "<div class=\"popup " + css + "\"><div style='width: 270px; float:left;'>" + n + "</div><div style='float:left;'><button class=\"close\" type=\"button\" onclick=\"close_notice('"+divid+"');\">x</button></div></div>"
+    n = "<div id=\"" + divid + "\" class=\"popup " + css + "\"><div style='width: 270px; float:left;'>" + n + "</div><div style='float:left;'><button class=\"close\" type=\"button\" onclick=\"close_notice('"+divid+"');\">x</button></div></div>"
     $("#popup").prepend(n);
     $('#'+divid).hide()
     $('#'+divid).fadeIn()
