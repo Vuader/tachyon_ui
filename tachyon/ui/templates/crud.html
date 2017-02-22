@@ -1,0 +1,23 @@
+{% block form %}
+{% endblock %}
+{% block warn %}
+{% endblock %}
+<br>
+{% if submit_url and window and formid %}
+<button type="submit" class="btn btn-primary" onclick="ajax_query('{{ window }}','{{ SITE }}/{{ submit_url }}','{{ formid }}');return false;">Submit</button>
+{% endif %}
+{% if edit_url and resource and window%}
+<button class="btn btn-warn" onclick="admin_title('{{resource}}');ajax_query('{{ window }}','{{ SITE }}/{{ edit_url }}');">Edit {{ resource }}</button>
+{% endif %}
+{% if delete_url and resource and window%}
+<button class="btn btn-danger" onclick="admin_title('{{resource}}');ajax_query('{{ window }}','{{ SITE }}/{{ delete_url }}'{%if formid%},'{{formid}}');return false{%else%}){%endif%};">Delete {{ resource }}</button>
+{% endif %}
+{% if back_url and resource and window%}
+{% set resource = resource + "s" %}
+<button class="btn btn-default" onclick="admin_title('{{resource}}');ajax_query('{{ window }}','{{ SITE }}/{{ back_url }}');">Back</button>
+{% endif %}
+{% if title %}
+<script>
+admin_title('{{ title }}')
+</script>
+{% endif %}

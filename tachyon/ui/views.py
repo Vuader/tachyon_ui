@@ -305,9 +305,19 @@ class User(nfw.Resource):
         app.router.add(nfw.HTTP_POST,
                        '/users/edit/{user_id}', self.edit,
                        'users:admin')
+        # DELETE USERS
+        app.router.add(nfw.HTTP_GET,
+                       '/users/delete/{user_id}', self.delete,
+                       'users:admin')
+        app.router.add(nfw.HTTP_POST,
+                       '/users/delete/{user_id}', self.delete,
+                       'users:admin')
 
 
     def view(self, req, resp, user_id=None):
+        renderValues = {}
+        renderValues['resource'] = 'User'
+        renderValues['window'] = '#window_content'
         if user_id is None:
             t = nfw.jinja.get_template('tachyon.ui/users/users.html')
             fields = OrderedDict()
@@ -317,23 +327,58 @@ class User(nfw.Resource):
             dt = datatable(req, 'users', '/users',
                            fields, view_button=True, service=False)
 
-            resp.body = t.render(dt=dt)
+            renderValues['dt'] = dt
+            renderValues['create_url'] = 'users/create'
+            resp.body = t.render(**renderValues)
         else:
+            renderValues['back_url'] = 'users'
+            renderValues['edit_url'] = 'users/edit/' + user_id
+            # We should fetch the Username from db for the title
+            # For now just setting to static
+	    renderValues['title'] = 'View User'
             t = nfw.jinja.get_template('tachyon.ui/users/view.html')
-            resp.body = t.render(window='#window_content',back='/users')
+            resp.body = t.render(**renderValues)
+
 
     def edit(self, req, resp, user_id=None):
-	#api = RestClient(req.context['restapi'])
-	#headers, response = api.execute(nfw.HTTP_GET,'/users/C0418B28-CCAE-459E-8882-568F433C46FB')
-	#userform = model.User(req)
-	#userform.load(response)
+        renderValues = {}
+        renderValues['title'] = 'Edit User'
+        renderValues['back_url'] = 'users/view/' + user_id
+        renderValues['window'] = '#window_content'
+        renderValues['submit_url'] = 'users/edit/' + user_id
+        renderValues['delete_url'] = 'users/delete/' + user_id
+        renderValues['formid'] = 'user'
+        renderValues['resource'] = 'User'
+	api = RestClient(req.context['restapi'])
+	headers, response = api.execute(nfw.HTTP_GET,'/users/' + user_id)
+	userform = model.User(req)
+	userform.load(response)
         t = nfw.jinja.get_template('tachyon.ui/users/edit.html')
-        resp.body = t.render()
+        resp.body = t.render(**renderValues)
 
 
     def create(self, req, resp):
+        renderValues = {}
+        renderValues['title'] = 'Create User'
+        renderValues['back_url'] = 'users'
+        renderValues['window'] = '#window_content'
+        renderValues['submit_url'] = 'users/create'
+        renderValues['formid'] = 'user'
+        renderValues['resource'] = 'User'	
         t = nfw.jinja.get_template('tachyon.ui/users/create.html')
-        resp.body = t.render()
+        resp.body = t.render(**renderValues)
+
+
+    def delete(self, req, resp, user_id=None):
+        renderValues = {}
+        renderValues['title'] = 'Delete User'
+        renderValues['back_url'] = 'users/edit/' + user_id
+        renderValues['window'] = '#window_content'
+        renderValues['delete_url'] = 'users/delete/' + user_id
+        renderValues['formid'] = 'user'
+        renderValues['resource'] = 'User'
+        t = nfw.jinja.get_template('tachyon.ui/users/delete.html')
+        resp.body = t.render(**renderValues)
 
 class Roles(nfw.Resource):
     def __init__(self, app):

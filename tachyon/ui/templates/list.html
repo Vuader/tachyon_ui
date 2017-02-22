@@ -1,2 +1,6 @@
-{% block datatable %}{% endblock %}
-{% block create_button %}{% endblock %}
+{% block datatable %}
+{% endblock %}
+{% if window and create_url %}
+<button class="btn btn-primary" onclick="ajax_query('{{ window }}','{{ SITE }}/{{ create_url }}');">Create {{ resource }}</button>
+{% endif %}
+<button class="btn btn-default" onclick="close_window()">Close</button>
