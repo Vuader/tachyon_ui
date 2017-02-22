@@ -6,11 +6,13 @@
   * @param string form_id Serialize Data from Form to post
   *
   */
+
 function ajax_query(element, url, form_id) {
     //url = url.replace(/\/\/+/g, '/');
     if (typeof(form_id) !== 'undefined') {
         var form = document.getElementById(form_id);
         if (typeof(window.FormData) == 'undefined') {
+            document.getElementById('loading').style.display = "block";
             $.ajax({url: url,
                 type: 'POST',
                 async: true,
@@ -25,9 +27,11 @@ function ajax_query(element, url, form_id) {
                     $(element).html(XMLHttpRequest.responseText);
                 }
             });
+            document.getElementById('loading').style.display = "none";
             return false;
         }
         else {
+            document.getElementById('loading').style.display = "block";
             $.ajax({url: url,
                 type: 'POST',
                 async: true,
@@ -42,10 +46,12 @@ function ajax_query(element, url, form_id) {
                     $(element).html(XMLHttpRequest.responseText);
                 }
             });
+            document.getElementById('loading').style.display = "none";
             return false;
         }
     }
     else {
+        document.getElementById('loading').style.display = "block";
         $.ajax({url: url,
             type: 'GET',
             async:true,
@@ -58,6 +64,7 @@ function ajax_query(element, url, form_id) {
                 $(element).html(XMLHttpRequest.responseText);
             }
         });
+        document.getElementById('loading').style.display = "block";
         return false;
     }
 }
@@ -105,25 +112,21 @@ function close_window() {
 
 
 function service(a) {
-    document.getElementById('loading').style.display = "block";
     document.getElementById('service').innerHTML = '';
     ajax_query("#service", a.href); 
     document.getElementById('title').innerHTML = a.innerHTML;
     document.getElementById('locked').style.display = "none";
     document.getElementById('window').style.display = "none";
-    document.getElementById('loading').style.display = "none";
     return false
 }
 
 
 function admin(a) {
-    document.getElementById('loading').style.display = "block";
     document.getElementById('window_content').innerHTML = '';
     ajax_query("#window_content", a.href); 
     document.getElementById('locked').style.display = "block";
     document.getElementById('window_title').innerHTML = a.innerHTML;
     document.getElementById('window').style.display = "block";
-    document.getElementById('loading').style.display = "none";
     return false
 }
 
@@ -133,17 +136,61 @@ function admin_title(title) {
 
 function form_service(form_id) {
     var form = document.getElementById(form_id);
-    document.getElementById('loading').style.display = "block";
     ajax_query("#service", form.action, form_id); 
-    document.getElementById('loading').style.display = "none";
     return false
 }
 
 function form_admin(form_id) {
     var form = document.getElementById(form_id);
-    document.getElementById('loading').style.display = "block";
     ajax_query("#window_content", form.action, form_id); 
-    document.getElementById('loading').style.display = "none";
     return false
+}
+
+notices = 0
+
+function notice(n, css) {
+    notices++;
+	var div = document.createElement("div");
+    div.id = "popup" + notices;
+	div.className = "popup " + css;
+    n = "<div style='width: 270px; float:left;'>" + n + "</div><div style='float:left;'><button class=\"close\" type=\"button\" onclick=\"close_notice('"+div.id+"');\">x</button></div>"
+    div.innerHTML = n;
+    popup = document.getElementById('popup');
+    popup.appendChild(div)
+    $('#'+div.id).hide()
+    $('#'+div.id).fadeIn()
+    if (css != 'error') {
+        setTimeout(function() { close_notice(div.id); }, 10000);
+    }
+    return String(div.id)
+}
+
+function info(n) {
+    div = notice(n, 'info')
+}
+
+function success(n) {
+    div = notice(n, 'success')
+}
+
+function error(n) {
+    div = notice(n, 'error')
+}
+
+function warning(n) {
+    div = notice(n, 'warning')
+}
+
+function close_notice(n) {
+    $('#'+n).fadeOut('slow',function() { delete_notice(n) })
+}
+
+function delete_notice(n) {
+    popup = document.getElementById(n);
+    if(typeof popup.remove === 'function') {
+        popup.remove()
+    } else {
+        popup.style.display = "none";
+    }
 }
 
