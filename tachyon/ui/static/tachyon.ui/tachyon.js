@@ -150,31 +150,30 @@ notices = 0
 
 function notice(n, css) {
     notices++;
-    divid = "popup" + notices;
+    var divid = String("popup" + notices);
     n = "<div id=\"" + divid + "\" class=\"popup " + css + "\"><div style='width: 270px; float:left;'>" + n + "</div><div style='float:left;'><button class=\"close\" type=\"button\" onclick=\"close_notice('"+divid+"');\">x</button></div></div>"
     $("#popup").prepend(n);
     $('#'+divid).hide()
     $('#'+divid).fadeIn()
     if (css != 'error') {
-        setTimeout(function() { close_notice(divid); }, 10000);
+        setTimeout(function() { close_notice(divid); }, 2000);
     }
-    return String(divid)
 }
 
 function info(n) {
-    div = notice(n, 'info')
+    notice(n, 'info')
 }
 
 function success(n) {
-    div = notice(n, 'success')
+    notice(n, 'success')
 }
 
 function error(n) {
-    div = notice(n, 'error')
+    notice(n, 'error')
 }
 
 function warning(n) {
-    div = notice(n, 'warning')
+    notice(n, 'warning')
 }
 
 function close_notice(n) {
