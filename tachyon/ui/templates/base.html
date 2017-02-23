@@ -12,8 +12,8 @@
     <link rel="stylesheet" type="text/css" href="{{STATIC}}/tachyon.ui/DataTables/datatables.min.css"/>
     <script src="{{STATIC}}/tachyon.ui/jquery-3.1.1.js"></script>
     <script src="{{STATIC}}/tachyon.ui/bootstrap/js/bootstrap.js"></script>
-    <script src="{{STATIC}}/tachyon.ui/tachyon.js"></script>
     <script type="text/javascript" src="{{STATIC}}/tachyon.ui/DataTables/datatables.min.js"></script>
+    <script src="{{STATIC}}/tachyon.ui/tachyon.js"></script>
     <link href="{{STATIC}}/tachyon.ui/select2/css/select2.min.css" rel="stylesheet" />
     <script src="{{STATIC}}/tachyon.ui/select2/js/select2.min.js"></script>
     <title>{{TITLE}}</title>
@@ -47,11 +47,11 @@
                 </ul>
                 </div>
                 {% if LOGIN %}
-                <form class="navbar-form navbar-right" method="get" action="{{ SITE }}/logout">
-                    <button type="submit" class="btn btn-success">Logout</button>
-                </form>
                 <form class="navbar-form navbar-right" method="post" action="{{ SITE }}/">
                     <div class="form-group">
+                    <form method="post">
+                        <input class="form-control search" type="text" name="search" placeholder="Find tenants">
+                    </form>
                     <select class="form-control">
                         {% for d in DOMAINS %}
                         <option value='{{ d }}'>{{ d }}</option>
@@ -68,6 +68,18 @@
 <div class="push_top"></div>
 <div class="loading" id="loading"></div>
 <div class="locked" id="locked"></div>
+<div class="confirm" id="confirm">
+    <div class="modal-header">
+        <button class="close" type="button" onclick="document.getElementById('confirm').style.display = 'none';">x</button>
+        <h4 class="modal-title">Confirmation</h4>
+    </div>
+    <div class="modal-body" id="confirmation">
+    </div>
+    <div class="modal-footer">
+		<button class="btn btn-default" onclick="document.getElementById('confirm').style.display = 'none';">Cancel</button>
+		<button id='continue' class="btn btn-danger">Continue</button>
+    </div>
+</div>
 <div class="window" id="window">
     <div class="modal-header">
         <button class="close" type="button" onclick='close_window()'>x</button>
@@ -75,8 +87,6 @@
     </div>
     <div class="modal-body" id="window_content">
         Content
-    </div>
-    <div class="modal-footer">
     </div>
 </div>
 
@@ -109,7 +119,12 @@
                     Login
                 </div>
                 <div class="block_content">
-		    {{ USERNAME }}
+                    <div class="box">
+                        {{ USERNAME }}
+                    </div>
+                    <form method="get" action="{{ SITE }}/logout">
+                        <button type="submit" class="btn btn-success">Logout</button>
+                    </form>
                 </div>
             </div>
             {% endif %}

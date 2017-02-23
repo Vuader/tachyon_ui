@@ -319,7 +319,6 @@ class User(nfw.Resource):
 
 
     def view(self, req, resp, user_id=None):
-        raise nfw.HTTPBadRequest('page not found for you',' yes man')
         renderValues = {}
         renderValues['resource'] = 'User'
         renderValues['window'] = '#window_content'
@@ -388,6 +387,7 @@ class User(nfw.Resource):
 class Roles(nfw.Resource):
     def __init__(self, app):
         app.router.add(nfw.HTTP_GET, '/users/roles', self.view, 'users:admin')
+        app.router.add(nfw.HTTP_POST, '/users/roles', self.view, 'users:admin')
         app.router.add(nfw.HTTP_GET, '/users/roles/view', self.view, 'USERS:ADMIN')
         app.router.add(nfw.HTTP_GET, '/users/roles/view/{role_id}', self.view, 'USERS:ADMIN')
         app.router.add(nfw.HTTP_GET, '/users/roles/edit/{role_id}', self.edit, 'USERS:ADMIN')
@@ -632,6 +632,21 @@ class Themes(nfw.Resource):
         self.css['div.locked']['height'] = '100%'
         self.css['div.locked']['width'] = '100%'
         self.css['div.locked']['opacity'] = '0.6'
+        self.css['div.confirm'] = {}
+        self.css['div.confirm']['display'] = 'none'
+        self.css['div.confirm']['position'] = 'absolute'
+        self.css['div.confirm']['top'] = '100px'
+        self.css['div.confirm']['left'] = '10%'
+        self.css['div.confirm']['right'] = '10%'
+        self.css['div.confirm']['margin'] = 'auto'
+        self.css['div.confirm']['width'] = '500px'
+        self.css['div.confirm']['height'] = 'auto'
+        self.css['div.confirm']['background-color'] = '#FFFFFF'
+        self.css['div.confirm']['z-index'] = '1005'
+        self.css['div.confirm']['overflow'] = 'auto'
+        self.css['div.confirm']['border'] = '1px solid rgba(0, 0, 0, .2)'
+        self.css['div.confirm']['border-radius'] = '6px'
+        self.css['div.confirm']['box-shadow'] = '0 5px 15px rgba(0, 0, 0, .5)'
         self.css['div.window'] = {}
         self.css['div.window']['display'] = 'none'
         self.css['div.window']['position'] = 'absolute'
@@ -768,6 +783,19 @@ class Themes(nfw.Resource):
         self.css['div.signin']['max-width'] = '400px'
         self.css['div.signin']['min-width'] = '200px'
         self.css['div.signin']['margin'] = 'auto'
+        self.css['div.box'] = {}
+        self.css['div.box']['width'] = 'auto'
+        self.css['div.box']['border-style'] = 'solid'
+        self.css['div.box']['padding-top'] = '2px'
+        self.css['div.box']['padding-bottom'] = '2px'
+        self.css['div.box']['padding-left'] = '2px'
+        self.css['div.box']['padding-right'] = '2px'
+        self.css['div.box']['border-color'] = '#e3e3e3'
+        self.css['div.box']['background-color'] = '#f5f5f5'
+        self.css['div.box']['border-width'] = '1px'
+        self.css['div.box']['box-shadow'] = 'inset 0 1px 1px rgba(0,0,0,.05)'
+        self.css['div.box']['border-radius'] = '3px'
+        self.css['div.box']['margin-bottom'] = '5px'
         self.css['div.block'] = {}
         self.css['div.block']['box-shadow'] = '5px 5px 5px #888888'
         self.css['div.block']['opacity'] = '0.9'
