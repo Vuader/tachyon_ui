@@ -1,18 +1,7 @@
 {% if error|length > 0 %}
-<div id="error" class="modal fade">
-  <div class="modal-dialog modal-sm">
-    <div class="modal-content">
-      <div class="modal-header alert alert-danger">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-        <h4 class="modal-title">Error</h4>
-      </div>
-      <div class="modal-body">
-            <ul>{% for e in error %}<li>{{e}}</li>{% endfor %}</ul>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
 <script>
-$('#error').modal('show')
+{% for e in error %}
+warning('<B>{{e}}</B> ({{REQUEST_ID}})');
+{% endfor %}
 </script>
 {% endif %}

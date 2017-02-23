@@ -24,7 +24,8 @@ function ajax_query(element, url, form_id) {
                     $(element).html(result);
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    $(element).html(XMLHttpRequest.responseText);
+                    error(XMLHttpRequest.responseText);
+                    //$(element).html(XMLHttpRequest.responseText);
                 }
             });
             document.getElementById('loading').style.display = "none";
@@ -43,7 +44,8 @@ function ajax_query(element, url, form_id) {
                     $(element).html(result);
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    $(element).html(XMLHttpRequest.responseText);
+                    error(XMLHttpRequest.responseText);
+                    //$(element).html(XMLHttpRequest.responseText);
                 }
             });
             document.getElementById('loading').style.display = "none";
@@ -61,7 +63,10 @@ function ajax_query(element, url, form_id) {
                 $(element).html(result);
             },
             error: function(XMLHttpRequest, textStatus, errorThrown) {
-                $(element).html(XMLHttpRequest.responseText);
+                document.getElementById('locked').style.display = "none";
+                document.getElementById('window').style.display = "none";
+                error(XMLHttpRequest.responseText);
+                //$(element).html(XMLHttpRequest.responseText);
             }
         });
         document.getElementById('loading').style.display = "none";

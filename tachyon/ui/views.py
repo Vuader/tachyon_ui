@@ -41,6 +41,7 @@ import time
 import nfw
 
 import tachyon.ui
+import tachyon.common
 from tachyon.common import RestClient
 from tachyon.ui import model
 
@@ -122,10 +123,12 @@ class Globals(nfw.Middleware):
         self.ui_config = app.config.get('ui')
         self.app_config = self.config.get('application')
         nfw.jinja.globals['TITLE'] = self.app_config.get('name','Tachyon')  
+        nfw.jinja.globals['NAME'] = self.app_config.get('name')
 
     def pre(self, req, resp):
+        nfw.jinja.globals['REQUEST_ID'] = req.request_id
+        nfw.jinja.globals[''] = self.app_config.get('name','Tachyon')  
         req.context['restapi'] = self.ui_config.get('restapi', '')
-        nfw.jinja.globals['NAME'] = self.app_config.get('name')
         resp.headers['Content-Type'] = nfw.TEXT_HTML
 
 
@@ -316,6 +319,7 @@ class User(nfw.Resource):
 
 
     def view(self, req, resp, user_id=None):
+        raise nfw.HTTPBadRequest('page not found for you',' yes man')
         renderValues = {}
         renderValues['resource'] = 'User'
         renderValues['window'] = '#window_content'
@@ -473,7 +477,7 @@ class Tachyon(nfw.Resource):
                 authenticated(req, auth)
                 nfw.jinja.globals['DOMAINS'] = req.context['domains']
                 render_menus(req)
-            except tachyon.ui.exceptions.Authentication as e:
+            except nfw.RestClientError as e:
                 clear_session(req)
                 error.append(e)
 
@@ -724,6 +728,8 @@ class Themes(nfw.Resource):
         self.css['#popup']['top'] = '50px'
         self.css['#popup']['left'] = 'auto'
         self.css['#popup']['right'] = '10px'
+        self.css['#popup']['font-family'] = 'helvetica,arial,sans-serif'
+        self.css['#popup']['font-size'] = '8pt'
         self.css['div.error'] = {}
         self.css['div.error']['background-color'] = '#f4e2e3'
         self.css['div.error']['color'] = '#9a6e6f'
@@ -740,8 +746,6 @@ class Themes(nfw.Resource):
         self.css['div.popup']['border-color'] = '#D8D8D8'
         self.css['div.popup']['border-style'] = 'solid'
         self.css['div.popup']['border-width'] = '1px'
-        self.css['div.popup']['font-family'] = 'helvetica,arial,sans-serif'
-        self.css['div.popup']['font-size'] = '16px'
         self.css['div.popup']['margin-bottom'] = '10px'
         self.css['div.popup']['margin-left'] = '0px'
         self.css['div.popup']['margin-right'] = '0px'
@@ -834,7 +838,7 @@ class Themes(nfw.Resource):
         self.css['footer']['margin-top'] = '0px'
         self.css['footer']['position'] = 'fixed'
         self.css['footer']['text-align'] = 'center'
-        self.css['footer']['z-index'] = '2'
+        self.css['footer']['z-index'] = '1010'
         self.css['footer']['width'] = '100%'
         self.css['footer:before'] = {}
         self.css['footer:before']['content'] = '"Tachyon Framework - Copyright (c) 2016 to 2017, Christiaan Frans Rademan, Dave Kruger. All rights resevered. BSD3-Clause License"'
