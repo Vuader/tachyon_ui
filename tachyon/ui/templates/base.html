@@ -19,6 +19,15 @@
     <title>{{TITLE}}</title>
 </head>
 <body>
+{% if LOGIN %}
+<script>
+    var login = true;
+</script>
+{% else %}
+<script>
+    var login = false;
+</script>
+{% endif %}
 <nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-wrapper menu">
         <div class="container">

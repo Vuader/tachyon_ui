@@ -64,7 +64,7 @@ function ajax_query(element, url, form_id) {
                 $(element).html(XMLHttpRequest.responseText);
             }
         });
-        document.getElementById('loading').style.display = "block";
+        document.getElementById('loading').style.display = "none";
         return false;
     }
 }
@@ -156,7 +156,7 @@ function notice(n, css) {
     $('#'+divid).hide()
     $('#'+divid).fadeIn()
     if (css != 'error') {
-        setTimeout(function() { close_notice(divid); }, 2000);
+        setTimeout(function() { close_notice(divid); }, 10000);
     }
 }
 
@@ -188,4 +188,34 @@ function delete_notice(n) {
         popup.style.display = "none";
     }
 }
+
+
+var login = false;
+
+function action(data) {
+    for (i=0; i < data.length; i++){
+        if (data[i].type == 'goto') {
+            window.location.replace(data[i].link);
+            login = false;
+        }
+    }
+}
+
+function poll() {
+    if (login == true) {
+        $.ajax({ url: "/ui/messaging",
+        success: function(data) {
+            action(data);
+           },
+        dataType: "json",
+        complete: poll,
+        timeout: 300000 });
+    }
+    else {
+        setTimeout(poll, 1000);
+    }
+}
+poll()
+
+
 

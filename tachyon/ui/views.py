@@ -33,16 +33,15 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import logging
-import traceback
 import json
 from collections import OrderedDict
-
-import tachyon.ui
-from tachyon.common import RestClient
-
+from StringIO import StringIO
+import time
 
 import nfw
 
+import tachyon.ui
+from tachyon.common import RestClient
 from tachyon.ui import model
 
 
@@ -176,8 +175,10 @@ def authenticated(req, auth):
         req.context['domain_admin'] = False
         req.context['domains'] = []
 	nfw.jinja.globals['USERNAME'] = auth['username']
-        req.session['token'] = req.session['token']
-        req.session['domain'] = req.session['domain']
+        if 'token' in req.session:
+            req.session['token'] = req.session['token']
+        if 'domain' in req.session:
+            req.session['domain'] = req.session['domain']
         if 'tenant' in req.session:
             req.session['tenant'] = req.session['tenant']
 
@@ -485,6 +486,45 @@ class Tachyon(nfw.Resource):
                                  password=password,
                                  domain=domain,
                                  error=error)
+
+
+class Messaging(nfw.Resource): 
+    def __init__(self, app): 
+        app.router.add(nfw.HTTP_GET, '/messaging', self.get, 'tachyon:public')
+
+    class Server(object):
+        def __init__(self, req, resp):
+            self.req = req
+            self.resp = resp
+            self.login = True
+            self.sent = False
+            self.timer = nfw.timer()
+
+        def read(self, size=0):
+            messages = []
+            if self.req.context['login'] is False:
+                messages.append({'type': 'goto',
+                                 'link': self.req.get_app_url()+'logout' })
+
+            while True:
+                time.sleep(1)
+                if nfw.timer(self.timer) > 50:
+                    reset = True
+                    self.timer = nfw.timer()
+                else:
+                    reset = False
+
+                if self.sent is True or reset is True:
+                    return None
+                else:
+                    if len(messages) > 0:
+                        self.sent = True
+                        return json.dumps(messages, indent=4)
+
+    def get(self, req, resp):
+        server = self.Server(req, resp)
+        return nfw.response.ResponseIoStream(server)
+                
 
 
 class DataTables(nfw.Resource):
