@@ -252,7 +252,7 @@ class Auth(nfw.Middleware):
             try:
                 auth = api.token(token, domain, tenant)
                 authenticated(req, auth)
-            except tachyon.ui.exceptions.Authentication:
+            except nfw.RestClientError:
                 clear_session(req)
 
         nfw.jinja.globals['DOMAINS'] = req.context['domains']
@@ -435,6 +435,7 @@ class Tachyon(nfw.Resource):
         app.router.add(nfw.HTTP_GET, '/login', self.login, 'tachyon:public')
         app.router.add(nfw.HTTP_POST, '/login', self.login, 'tachyon:public')
         app.router.add(nfw.HTTP_GET, '/logout', self.logout, 'tachyon:public')
+        app.router.add(nfw.HTTP_GET, '/expired', self.expired, 'tachyon:public')
         app.context['menu'] = Menu()
         app.context['menu_accounts'] = Menu()
         app.context['menu_services'] = Menu()
@@ -453,6 +454,11 @@ class Tachyon(nfw.Resource):
         clear_session(req)
         render_menus(req)
         nfw.view('/login', nfw.HTTP_POST, req, resp)
+
+    def expired(self, req, resp):
+        clear_session(req)
+        render_menus(req)
+        raise nfw.HTTPBadRequest(title="Authentication", description="Token Expired")
 
     def home(self, req, resp):
         if req.session.get('token') is not None:
@@ -508,7 +514,7 @@ class Messaging(nfw.Resource):
             messages = []
             if self.req.context['login'] is False:
                 messages.append({'type': 'goto',
-                                 'link': self.req.get_app_url()+'logout' })
+                                 'link': self.req.get_app_url()+'expired' })
 
             while True:
                 time.sleep(1)
