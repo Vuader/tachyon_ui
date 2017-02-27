@@ -375,9 +375,6 @@ class User(nfw.Resource):
         app.router.add(nfw.HTTP_GET,
                        '/users/delete/{user_id}', self.delete,
                        'users:admin')
-        app.router.add(nfw.HTTP_POST,
-                       '/users/delete/{user_id}', self.delete,
-                       'users:admin')
 
     def view(self, req, resp, user_id=None):
         if user_id is None:
@@ -390,24 +387,44 @@ class User(nfw.Resource):
         else:
             api = RestClient(req.context['restapi'])
             headers, response = api.execute(nfw.HTTP_GET, "/users/%s" % (user_id,))
-            form = model.User(response, load=True, readonly=True)
+            form = model.User(response, validate=False, readonly=True)
             view(req, resp, content=form, id=user_id, title='View User')
 
     def edit(self, req, resp, user_id=None):
         if req.method == nfw.HTTP_POST:
-            form = model.User(req, load=False, readonly=True)
-            
+            form = model.User(req, validate=True, readonly=True)
+            api = RestClient(req.context['restapi'])
+            headers, response = api.execute(nfw.HTTP_PUT, "/users/%s" %
+                                            (user_id,), form)
         else:
             api = RestClient(req.context['restapi'])
             headers, response = api.execute(nfw.HTTP_GET, "/users/%s" % (user_id,))
-            form = model.User(response, True)
+            form = model.User(response, validate=False)
             edit(req, resp, content=form, id=user_id, title='Edit User')
 
     def create(self, req, resp):
-        form = ''
-        create(req, resp, content=form, title='Create User')
+        if req.method == nfw.HTTP_POST:
+            try:
+                form = model.User(req, validate=True)
+                api = RestClient(req.context['restapi'])
+                headers, response = api.execute(nfw.HTTP_POST, "/users", form)
+                if 'id' in response:
+                    id = response['id']
+                    self.view(req, resp, user_id=id)
+            except nfw.HTTPBadRequest as e:
+                form = model.User(req, validate=False)
+                create(req, resp, content=form, title='Create User', error=[e])
+        else:
+            form = model.User(req, validate=False)
+            create(req, resp, content=form, title='Create User')
 
     def delete(self, req, resp, user_id=None):
+        try:
+            api = RestClient(req.context['restapi'])
+            headers, response = api.execute(nfw.HTTP_DELETE, "/users/%s" % (user_id,))
+        except nfw.HTTPBadRequest as e:
+            self.edit(req, resp, user_id=user_id)
+
         self.view(req, resp)
 
 class Roles(nfw.Resource):

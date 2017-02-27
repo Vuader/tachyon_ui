@@ -55,7 +55,12 @@ function ajax_query(element, url, form, form_save=false) {
                     document.getElementById('loading').style.display = "none";
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    error(XMLHttpRequest.responseText);
+                    if (XMLHttpRequest.status == 400) {
+                        warning(XMLHttpRequest.responseText);
+                    }
+                    else {
+                        error(XMLHttpRequest.responseText);
+                    }
                     //$(element).html(XMLHttpRequest.responseText);
                     document.getElementById('loading').style.display = "none";
                 }
@@ -98,7 +103,12 @@ function ajax_query(element, url, form, form_save=false) {
                     document.getElementById('loading').style.display = "none";
                 },
                 error: function(XMLHttpRequest, textStatus, errorThrown) {
-                    error(XMLHttpRequest.responseText);
+                    if (XMLHttpRequest.status == 400) {
+                        warning(XMLHttpRequest.responseText);
+                    }
+                    else {
+                        error(XMLHttpRequest.responseText);
+                    }
                     //$(element).html(XMLHttpRequest.responseText);
                     document.getElementById('loading').style.display = "none";
                 }
@@ -136,7 +146,12 @@ function ajax_query(element, url, form, form_save=false) {
             error: function(XMLHttpRequest, textStatus, errorThrown) {
                 document.getElementById('locked').style.display = "none";
                 document.getElementById('window').style.display = "none";
-                error(XMLHttpRequest.responseText);
+                if (XMLHttpRequest.status == 400) {
+                    warning(XMLHttpRequest.responseText);
+                }
+                else {
+                    error(XMLHttpRequest.responseText);
+                }
                 document.getElementById('loading').style.display = "none";
                 //$(element).html(XMLHttpRequest.responseText);
             }
