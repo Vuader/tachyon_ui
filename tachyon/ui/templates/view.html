@@ -1,15 +1,44 @@
-{% block form %}
-{% endblock %}
-<br>
-{% if edit_url and window %}
-<button class="btn btn-warning" onclick="ajax_query('{{ window }}','{{ SITE }}/{{ edit_url }}');">Edit {{ resource }}</button>
+{% if save_url %}
+<form method="post" class="form-horizontal" role="form" data-url="{{ save_url }}" data-name="{{ title }}" data-save="true">
 {% endif %}
-{% if back_url and window and resource%}
-{% set resource = resource + "s" %}
-<button class="btn btn-default" onclick="admin_title('{{resource}}');ajax_query('{{ window }}','{{ SITE }}/{{ back_url }}');">Back</button>
+{% if created_url %}
+<form method="post" class="form-horizontal" role="form" data-url="{{ created_url }}" data-name="{{ title }}">
 {% endif %}
-{% if title %}
+{{ content }}
+{% if create_url %}
+<button class="btn btn-primary" data-url="{{ create_url }}" data-name="{{ title }}">Create</button>
+{% endif %}
+{% if save_url %}
+<input type="submit" class="btn btn-primary" value="Save">
+{% endif %}
+{% if created_url %}
+<input type="submit" class="btn btn-primary" value="Create">
+{% endif %}
+{% if edit_url %}
+<button class="btn btn-warning" data-url="{{ edit_url }}" data-name="{{ title }}">Edit</button>
+{% endif %}
+{% if delete_url %}
+<button class="btn btn-danger" data-url="{{ delete_url }}" data-name="{{ title }}" data-confirm="{{ confirm }}">Delete</button>
+{% endif %}
+{% if cancel_url %}
+<button class="btn btn-default" data-url="{{ cancel_url }}" data-name="{{ title }}">Cancel</button>
+{% endif %}
+{% if back_url %}
+<button class="btn btn-default" data-url="{{ back_url }}" data-name="{{ title }}">Back</button>
+{% endif %}
+<button id="window_close" class="btn btn-default" style="display: none;" onclick="close_window()">Close</button>
+{% if save_url %}
+</form>
+{% endif %}
+{% if created_url %}
+</form>
+{% endif %}
 <script>
-admin_title('{{ title }}')
+    var display = document.getElementById('window').style.display;
+    if (display == 'block') {
+        document.getElementById('window_close').style.display = 'inline';
+    }
+	{% if title %}
+   	title("{{ title }}");
+	{% endif %}
 </script>
-{% endif %}

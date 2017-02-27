@@ -45,8 +45,67 @@ import tachyon.common
 from tachyon.common import RestClient
 from tachyon.ui import model
 
-
 log = logging.getLogger(__name__)
+
+
+def resource(req):
+    res = req.get_full_path().replace(req.get_script(),'')
+    uri = res.split('?')[0].strip('/').split('/')
+    return uri[0]
+
+
+def route(req, route):
+    route = route.strip('/')
+    return req.router._match(nfw.HTTP_GET, route)
+
+
+def view_access(req, subview):
+    res = resource(req)
+    subview = subview.strip('/')
+    res = "%s/%s" % (res, subview)
+    r = route(req, res)
+    if r is not None:
+        r_route, obj_kwargs = r
+        method, r_route, obj, name = r_route
+        if req.policy.validate(name):
+            return True
+    return False
+
+
+def view(req, resp, **kwargs):
+    res = resource(req)
+    id = kwargs.get('id', None)
+    if id is None:
+        if view_access(req, '/create'):
+            kwargs['create_url'] = "%s/%s/create" % (req.get_app(), res)
+        t = nfw.jinja.get_template('tachyon.ui/view.html')
+    else:
+        if view_access(req, "/edit/%s" % (id,)):
+            kwargs['edit_url'] = "%s/%s/edit/%s" % (req.get_app(), res, id)
+        kwargs['back_url'] = "%s/%s" % (req.get_app(),res)
+        t = nfw.jinja.get_template('tachyon.ui/view.html')
+
+    resp.body = t.render(**kwargs)
+
+
+def edit(req, resp, **kwargs):
+    res = resource(req)
+    id = kwargs.get('id', None)
+    if 'confirm' not in kwargs:
+        kwargs['confirm'] = "Continue deleting item?"
+    kwargs['save_url'] = "%s/%s/edit/%s" % (req.get_app(), res, id)
+    kwargs['cancel_url'] = "%s/%s/view/%s" % (req.get_app(), res, id)
+    kwargs['delete_url'] = "%s/%s/delete/%s" % (req.get_app(), res, id)
+    t = nfw.jinja.get_template('tachyon.ui/view.html')
+    resp.body = t.render(**kwargs)
+
+
+def create(req, resp, id=None, **kwargs):
+    res = resource(req)
+    kwargs['created_url'] = "%s/%s/create" % (req.get_app(), res)
+    kwargs['back_url'] = "%s/%s" % (req.get_app(), res)
+    t = nfw.jinja.get_template('tachyon.ui/view.html')
+    resp.body = t.render(**kwargs)
 
 
 def datatable(req, table_id, url,
@@ -98,16 +157,17 @@ def datatable(req, table_id, url,
         js += "]"
     js += "} );"
     if view_button is True:
+        res = resource(req)
         url = req.get_url()
 	js += "$('#%s tbody')" % (table_id,)
         js += ".on( 'click', 'button', function () {"
 	js += "var data = table.row( $(this).parents('tr') ).data();"
         if service is False:
-            js += "ajax_query(\"#window_content\", \"%s/view/\"+data[%s]);" % (url,
-                                                                          id_field_no)
+            js += "ajax_query(\"#window_content\","
+            js += "\"%s/%s/view/\"+data[%s]);" % (req.get_app(), res, id_field_no)
         else:
-            js += "ajax_query(\"#service\", \"%s/view/\"+data[%s]);" % (url,
-                                                                   id_field_no )
+            js += "ajax_query(\"#service\","
+            js += "\"%s/%s/view/\"+data[%s]);" % (req.get_app(), res, id_field_no)
 	js += "} );"
 
     js += "} );"
@@ -173,11 +233,11 @@ class Menu():
 
 def authenticated(req, auth):
     if req.session.get('token') is not None:
-        nfw.jinja.globals['LOGIN'] = True
+        nfw.jinja.request['LOGIN'] = True
         req.context['roles'] = []
         req.context['domain_admin'] = False
         req.context['domains'] = []
-	nfw.jinja.globals['USERNAME'] = auth['username']
+	nfw.jinja.request['USERNAME'] = auth['username']
         if 'token' in req.session:
             req.session['token'] = req.session['token']
         if 'domain' in req.session:
@@ -208,17 +268,17 @@ def clear_session(req):
     req.context['domain_admin'] = False
     req.context['domains'] = []
     req.context['roles'] = []
-    nfw.jinja.globals['LOGIN'] = False
+    nfw.jinja.request['LOGIN'] = False
 
 
 def render_menus(req):
-    nfw.jinja.globals['MENU'] = req.app_context['menu'].render(req.app,
+    nfw.jinja.request['MENU'] = req.app_context['menu'].render(req.app,
                                                                req.policy,
                                                                False)
-    nfw.jinja.globals['MENU_ACCOUNTS'] = req.app_context['menu_accounts'].render(req.app,
+    nfw.jinja.request['MENU_ACCOUNTS'] = req.app_context['menu_accounts'].render(req.app,
                                                                                  req.policy,
                                                                                  True)
-    nfw.jinja.globals['MENU_SERVICES'] = req.app_context['menu_services'].render(req.app,
+    nfw.jinja.request['MENU_SERVICES'] = req.app_context['menu_services'].render(req.app,
                                                                                  req.policy,
                                                                                  True)
 
@@ -232,7 +292,7 @@ class Auth(nfw.Middleware):
         req.context['domain_admin'] = False
         req.context['roles'] = []
         req.context['domains'] = []
-        nfw.jinja.globals['LOGIN'] = False
+        nfw.jinja.request['LOGIN'] = False
 
         token = req.session.get('token')
         restapi = req.context['restapi']
@@ -254,8 +314,10 @@ class Auth(nfw.Middleware):
                 authenticated(req, auth)
             except nfw.RestClientError:
                 clear_session(req)
+                raise nfw.HTTPBadRequest(title="Authentication",
+                                         description="Your token has expired")
 
-        nfw.jinja.globals['DOMAINS'] = req.context['domains']
+        nfw.jinja.request['DOMAINS'] = req.context['domains']
         render_menus(req)
 
 
@@ -317,72 +379,36 @@ class User(nfw.Resource):
                        '/users/delete/{user_id}', self.delete,
                        'users:admin')
 
-
     def view(self, req, resp, user_id=None):
-        renderValues = {}
-        renderValues['resource'] = 'User'
-        renderValues['window'] = '#window_content'
         if user_id is None:
-            t = nfw.jinja.get_template('tachyon.ui/users/users.html')
             fields = OrderedDict()
             fields['username'] = 'Username'
             fields['email'] = 'Email'
-
             dt = datatable(req, 'users', '/users',
                            fields, view_button=True, service=False)
-
-            renderValues['dt'] = dt
-            renderValues['create_url'] = 'users/create'
-            resp.body = t.render(**renderValues)
+            view(req, resp, content=dt, title='Users')
         else:
-            renderValues['back_url'] = 'users'
-            renderValues['edit_url'] = 'users/edit/' + user_id
-            # We should fetch the Username from db for the title
-            # For now just setting to static
-	    renderValues['title'] = 'View User'
-            t = nfw.jinja.get_template('tachyon.ui/users/view.html')
-            resp.body = t.render(**renderValues)
-
+            api = RestClient(req.context['restapi'])
+            headers, response = api.execute(nfw.HTTP_GET, "/users/%s" % (user_id,))
+            form = model.User(response, load=True, readonly=True)
+            view(req, resp, content=form, id=user_id, title='View User')
 
     def edit(self, req, resp, user_id=None):
-        renderValues = {}
-        renderValues['title'] = 'Edit User'
-        renderValues['back_url'] = 'users/view/' + user_id
-        renderValues['window'] = '#window_content'
-        renderValues['submit_url'] = 'users/edit/' + user_id
-        renderValues['delete_url'] = 'users/delete/' + user_id
-        renderValues['formid'] = 'user'
-        renderValues['resource'] = 'User'
-	api = RestClient(req.context['restapi'])
-	headers, response = api.execute(nfw.HTTP_GET,'/users/' + user_id)
-	userform = model.User(req)
-	userform.load(response)
-        t = nfw.jinja.get_template('tachyon.ui/users/edit.html')
-        resp.body = t.render(**renderValues)
-
+        if req.method == nfw.HTTP_POST:
+            form = model.User(req, load=False, readonly=True)
+            
+        else:
+            api = RestClient(req.context['restapi'])
+            headers, response = api.execute(nfw.HTTP_GET, "/users/%s" % (user_id,))
+            form = model.User(response, True)
+            edit(req, resp, content=form, id=user_id, title='Edit User')
 
     def create(self, req, resp):
-        renderValues = {}
-        renderValues['title'] = 'Create User'
-        renderValues['back_url'] = 'users'
-        renderValues['window'] = '#window_content'
-        renderValues['submit_url'] = 'users/create'
-        renderValues['formid'] = 'user'
-        renderValues['resource'] = 'User'	
-        t = nfw.jinja.get_template('tachyon.ui/users/create.html')
-        resp.body = t.render(**renderValues)
-
+        form = ''
+        create(req, resp, content=form, title='Create User')
 
     def delete(self, req, resp, user_id=None):
-        renderValues = {}
-        renderValues['title'] = 'Delete User'
-        renderValues['back_url'] = 'users/edit/' + user_id
-        renderValues['window'] = '#window_content'
-        renderValues['delete_url'] = 'users/delete/' + user_id
-        renderValues['formid'] = 'user'
-        renderValues['resource'] = 'User'
-        t = nfw.jinja.get_template('tachyon.ui/users/delete.html')
-        resp.body = t.render(**renderValues)
+        self.view(req, resp)
 
 class Roles(nfw.Resource):
     def __init__(self, app):
@@ -471,17 +497,16 @@ class Tachyon(nfw.Resource):
         username = req.post.get('username', '')
         password = req.post.get('password', '')
         domain = req.post.get('domain', 'default')
-        restapi = req.context['restapi']
         error = []
         if username != '':
-            api = RestClient(restapi)
+            api = RestClient(req.context['restapi'])
             try:
                 auth = api.authenticate(username, password, domain)
                 token = auth['token']
                 req.session['token'] = token
                 req.session['domain'] = domain
                 authenticated(req, auth)
-                nfw.jinja.globals['DOMAINS'] = req.context['domains']
+                nfw.jinja.request['DOMAINS'] = req.context['domains']
                 render_menus(req)
             except nfw.RestClientError as e:
                 clear_session(req)
@@ -509,6 +534,7 @@ class Messaging(nfw.Resource):
             self.login = True
             self.sent = False
             self.timer = nfw.timer()
+            self.reset = False
 
         def read(self, size=0):
             messages = []
@@ -519,12 +545,11 @@ class Messaging(nfw.Resource):
             while True:
                 time.sleep(1)
                 if nfw.timer(self.timer) > 50:
-                    reset = True
+                    self.reset = True
                     self.timer = nfw.timer()
-                else:
-                    reset = False
+                    return "[]"
 
-                if self.sent is True or reset is True:
+                if self.sent is True or self.reset is True:
                     return None
                 else:
                     if len(messages) > 0:
@@ -673,7 +698,7 @@ class Themes(nfw.Resource):
         self.css['div.loading']['left'] = '0'
         self.css['div.loading']['height'] = '100%'
         self.css['div.loading']['width'] = '100%'
-        self.css['div.loading']['background'] = 'rgba( 255, 255, 255, .5 )'
+        self.css['div.loading']['background'] = 'rgba( 255, 255, 255, .8 )'
         self.css['div.loading']['background'] += "url(\'%s" % (images,)
         self.css['div.loading']['background'] += '/loader.gif\')'
         self.css['div.loading']['background'] += '50% 50% no-repeat'

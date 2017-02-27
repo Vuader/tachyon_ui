@@ -14,6 +14,8 @@ $.fn.dataTable.ext.errMode = 'throw';
   *
   */
 function ajax_query(element, url, form, form_save=false) {
+    $('html, body').animate({ scrollTop: 0 }, 'fast');
+    document.getElementById('confirm').style.display = 'none';
     //url = url.replace(/\/\/+/g, '/');
     if (typeof(form) !== 'undefined') {
         if (typeof(window.FormData) == 'undefined') {
@@ -289,7 +291,6 @@ function link(element) {
                 document.getElementById('window').style.display = "block";
             }   
         }
-        $('html, body').animate({ scrollTop: 0 }, 'fast');
         return false
     }
 }
@@ -303,7 +304,6 @@ function service(a) {
     document.getElementById('title').innerHTML = a.innerHTML;
     document.getElementById('locked').style.display = "none";
     document.getElementById('window').style.display = "none";
-    $('html, body').animate({ scrollTop: 0 }, 'fast');
     return false
 }
 
@@ -315,13 +315,23 @@ function admin(a) {
     ajax_query("#window_content", a.href); 
     document.getElementById('locked').style.display = "block";
     document.getElementById('window_title').innerHTML = a.innerHTML;
-    $('html, body').animate({ scrollTop: 0 }, 'fast');
     document.getElementById('window').style.display = "block";
     return false
 }
 
-function admin_title(title) {
-    document.getElementById('window_title').innerHTML = title;
+/**
+  * Set title
+  */
+function title(title) {
+    var display = document.getElementById('window').style.display;
+    if (display == "none" || display == "")
+    {
+        document.getElementById('title').innerHTML = title;
+    }
+    else
+    {
+        document.getElementById('window_title').innerHTML = title;
+    }
 }
 
 /**
@@ -336,9 +346,13 @@ function notice(n, css) {
     $("#popup").prepend(n);
     $('#'+divid).hide()
     $('#'+divid).fadeIn()
-    if (css != 'error') {
+    if (css == 'error') {
+        setTimeout(function() { close_notice(divid); }, 30000);
+    }
+    else {
         setTimeout(function() { close_notice(divid); }, 10000);
     }
+
 }
 
 /**
@@ -415,9 +429,13 @@ function poll() {
         $.ajax({ url: "/ui/messaging",
         success: function(data) {
             action(data);
-           },
+            poll();
+        },
         dataType: "json",
-        complete: poll,
+        //complete: poll,
+        error: function(XMLHttpRequest, textStatus, errorThrown) {
+            setTimeout(poll, 60000);
+        },
         timeout: 300000 });
     }
     else {
@@ -428,8 +446,9 @@ function poll() {
 /**
   * Run Polling function
   */
-poll()
-
+$( document ).ready(function() {
+    poll()
+});
 
 /**
   * Show menu item you clicked on.
