@@ -37,6 +37,7 @@ import json
 from collections import OrderedDict
 from StringIO import StringIO
 import time
+import re
 
 import nfw
 
@@ -50,9 +51,9 @@ log = logging.getLogger(__name__)
 
 def resource(req):
     res = req.get_full_path().replace(req.get_script(),'')
-    uri = res.split('?')[0].strip('/').split('/')
-    return uri[0]
-
+    uri = res.split('?')[0].strip('/')
+    uri = re.sub('/(view|edit)/.*','',uri)
+    return uri
 
 def route(req, route):
     route = route.strip('/')
