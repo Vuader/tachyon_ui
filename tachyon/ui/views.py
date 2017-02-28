@@ -52,7 +52,7 @@ log = logging.getLogger(__name__)
 def resource(req):
     res = req.get_full_path().replace(req.get_script(),'')
     uri = res.split('?')[0].strip('/')
-    uri = re.sub('/(view|edit)/.*','',uri)
+    uri = re.sub('/(view|edit|create).*','',uri)
     return uri
 
 def route(req, route):
